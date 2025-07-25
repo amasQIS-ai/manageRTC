@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import io from "socket.io-client";
 import { useAuth } from "@clerk/clerk-react";
 
 const SocketContext = createContext(null);
@@ -19,9 +19,11 @@ export const SocketProvider = ({ children }) => {
       }
 
       const token = await getToken();
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url =
+        process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
       const newSocket = io(backend_url, {
         auth: { token },
+        timeout: 20000,
       });
 
       newSocket.on("connect", () => {
@@ -43,6 +45,7 @@ export const SocketProvider = ({ children }) => {
       socketRef.current = null;
       setSocketState(null);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]);
 
   return (

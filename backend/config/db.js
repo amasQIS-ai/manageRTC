@@ -40,7 +40,9 @@ export const getTenantCollections = (tenantDbName) => {
     attendance: db.collection("attendance"),
     departments: db.collection("departments"),
     leaves: db.collection("leaves"),
+    leaveRequests: db.collection("leaves"),
     leaveTypes: db.collection("leaveTypes"),
+    approvals: db.collection("approvals"),
     invoices: db.collection("invoices"),
     activities: db.collection("activities"),
     todos: db.collection("todos"),
@@ -48,6 +50,11 @@ export const getTenantCollections = (tenantDbName) => {
     birthdays: db.collection("birthdays"),
     jobApplications: db.collection("jobApplications"),
     earnings: db.collection("earnings"),
+
+    //Pipeline Collections
+    pipelines: db.collection("pipelines"),
+    stages: db.collection("stages"),
+    
   };
 };
 
