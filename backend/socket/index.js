@@ -114,12 +114,19 @@ export const socketHandler = (httpServer) => {
         // Check if role exists, else assign default role based on metadata
         let role = user.publicMetadata?.role;
         let companyId = user.publicMetadata?.companyId || null;
+        
+        // TEMPORARY FIX: Auto-assign companyId for admin users in development
+        if (isDevelopment && role === "admin" && !companyId) {
+          companyId = "68443081dcdfe43152aebf80";
+          console.log(`🔧 Development fix: Auto-assigning companyId ${companyId} to admin user`);
+        }
 
         console.log(`User ${user.id} metadata:`, {
           role: role,
           companyId: companyId,
           hasVerification: !!user.publicMetadata?.isAdminVerified,
           environment: isDevelopment ? "development" : "production",
+          publicMetadata: user.publicMetadata
         });
 
         if (!role) {
@@ -127,6 +134,9 @@ export const socketHandler = (httpServer) => {
           // Only assign 'employee' role if they have a companyId and are verified
           if (companyId && user.publicMetadata?.isVerified) {
             role = "employee"; // Default to employee, not admin
+          } else if (isDevelopment && companyId) {
+            role = "admin"; // In development, allow admin role for testing
+            console.log(`[Development] Setting admin role for user ${user.id}`);
           } else {
             role = "public"; // Public users have no company access
           }
@@ -138,7 +148,7 @@ export const socketHandler = (httpServer) => {
 
           // Update metadata with the assigned role
           await clerkClient.users.updateUserMetadata(user.id, {
-            publicMetadata: { ...user.publicMetadata, role },
+            publicMetadata: { ...user.publicMetadata, role, companyId },
           });
         } else {
           console.log(`User ${user.id} has existing role: ${role}`);
@@ -230,6 +240,7 @@ export const socketHandler = (httpServer) => {
       `Client connected: ${socket.id}, Role: ${socket.role}, Company: ${socket.companyId || "None"
       }`
     );
+    console.log(`Socket user metadata:`, socket.userMetadata);
     const role = socket.role || "guest";
   router(socket, io, role);
 

@@ -1035,8 +1035,20 @@ export const getTodos = async (
 ) => {
   try {
     const collections = getTenantCollections(companyId);
+    // Build the base query - for admin users, show all todos in the company
+    let query = {
+      isDeleted: { $ne: true }
+    };
+    
+    // Only filter by userId for non-admin users (if needed in the future)
+    // For now, admin users see all todos in the company
 
-    // Calculate date ranges for filtering
+    // Add priority filter if not "all"
+    if (filter && filter !== "all" && ["high", "medium", "low"].includes(filter.toLowerCase())) {
+      query.priority = { $regex: new RegExp(`^${filter}$`, 'i') };
+    }
+
+    // Calculate date ranges for filtering (only for date-based filters)
     const now = new Date();
     let dateFilter = {};
 
@@ -1070,17 +1082,15 @@ export const getTodos = async (
           createdAt: { $gte: monthStart, $lte: monthEnd },
         };
         break;
-      default:
-        // No date filter for 'all'
-        break;
+    }
+
+    // Add date filter to query if applicable
+    if (Object.keys(dateFilter).length > 0) {
+      query = { ...query, ...dateFilter };
     }
 
     const todos = await collections.todos
-      .find({
-        userId,
-        isDeleted: { $ne: true },
-        ...dateFilter,
-      })
+      .find(query)
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -2061,4 +2071,253 @@ export const deleteUser = async (companyId, userId) => {
   }
   
   return { done: true, message: "User deleted successfully." };
+};
+
+// Add todo
+export const addTodo = async (companyId, userId, todoData) => {
+  try {
+    const collections = getTenantCollections(companyId);
+
+    const newTodo = {
+      ...todoData,
+      createdBy: userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      completed: false,
+      isDeleted: false,
+    };
+
+    const result = await collections.todos.insertOne(newTodo);
+
+    // Add activity log
+    await collections.activities.insertOne({
+      employeeId: userId,
+      action: "Todo Created",
+      description: `Created new todo: ${todoData.title}`,
+      createdAt: new Date(),
+    });
+
+    return {
+      done: true,
+      data: { ...newTodo, _id: result.insertedId },
+    };
+  } catch (error) {
+    console.error("Error adding todo:", error);
+    return { done: false, error: error.message };
+  }
+};
+
+// Update todo
+export const updateTodo = async (companyId, todoId, updateData) => {
+  try {
+    const collections = getTenantCollections(companyId);
+
+    const result = await collections.todos.updateOne(
+      { _id: new ObjectId(todoId) },
+      { 
+        $set: {
+          ...updateData,
+          updatedAt: new Date(),
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return { done: false, error: "Todo not found" };
+    }
+
+    // Add activity log
+    await collections.activities.insertOne({
+      employeeId: updateData.createdBy || "system",
+      action: "Todo Updated",
+      description: `Updated todo: ${updateData.title || "Todo"}`,
+      createdAt: new Date(),
+    });
+
+    return {
+      done: true,
+      data: { _id: todoId, ...updateData },
+    };
+  } catch (error) {
+    console.error("Error updating todo:", error);
+    return { done: false, error: error.message };
+  }
+};
+
+// Delete todo (soft delete)
+export const deleteTodo = async (companyId, todoId) => {
+  try {
+    const collections = getTenantCollections(companyId);
+
+    const result = await collections.todos.updateOne(
+      { _id: new ObjectId(todoId) },
+      { 
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return { done: false, error: "Todo not found" };
+    }
+
+    // Add activity log
+    await collections.activities.insertOne({
+      employeeId: "system",
+      action: "Todo Deleted",
+      description: `Deleted todo with ID: ${todoId}`,
+      createdAt: new Date(),
+    });
+
+    return {
+      done: true,
+      message: "Todo deleted successfully",
+    };
+  } catch (error) {
+    console.error("Error deleting todo:", error);
+    return { done: false, error: error.message };
+  }
+};
+
+// Delete todo permanently
+export const deleteTodoPermanently = async (companyId, todoId) => {
+  try {
+    const collections = getTenantCollections(companyId);
+
+    const result = await collections.todos.deleteOne({
+      _id: new ObjectId(todoId),
+    });
+
+    if (result.deletedCount === 0) {
+      return { done: false, error: "Todo not found" };
+    }
+
+    // Add activity log
+    await collections.activities.insertOne({
+      employeeId: "system",
+      action: "Todo Permanently Deleted",
+      description: `Permanently deleted todo with ID: ${todoId}`,
+      createdAt: new Date(),
+    });
+
+    return {
+      done: true,
+      message: "Todo permanently deleted",
+    };
+  } catch (error) {
+    console.error("Error permanently deleting todo:", error);
+    return { done: false, error: error.message };
+  }
+};
+
+// Get todo statistics
+export const getTodoStatistics = async (companyId, filter = "all") => {
+  try {
+    const collections = getTenantCollections(companyId);
+
+    // Build the base query
+    let query = {
+      isDeleted: { $ne: true }
+    };
+
+    // Add date filter if applicable
+    const now = new Date();
+    let dateFilter = {};
+
+    switch (filter) {
+      case "today":
+        const startOfToday = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        );
+        const endOfToday = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1
+        );
+        dateFilter = {
+          createdAt: { $gte: startOfToday, $lt: endOfToday },
+        };
+        break;
+      case "week":
+        const weekStart = startOfWeek(now);
+        const weekEnd = endOfWeek(now);
+        dateFilter = {
+          createdAt: { $gte: weekStart, $lte: weekEnd },
+        };
+        break;
+      case "month":
+        const monthStart = startOfMonth(now);
+        const monthEnd = endOfMonth(now);
+        dateFilter = {
+          createdAt: { $gte: monthStart, $lte: monthEnd },
+        };
+        break;
+    }
+
+    // Add date filter to query if applicable
+    if (Object.keys(dateFilter).length > 0) {
+      query = { ...query, ...dateFilter };
+    }
+
+    const todoStats = await collections.todos
+      .aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            completed: {
+              $sum: {
+                $cond: [{ $eq: ["$completed", true] }, 1, 0],
+              },
+            },
+            pending: {
+              $sum: {
+                $cond: [{ $eq: ["$completed", false] }, 1, 0],
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
+
+    const stats = todoStats[0] || { total: 0, completed: 0, pending: 0 };
+
+    // Get priority distribution
+    const priorityStats = await collections.todos
+      .aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: "$priority",
+            count: { $sum: 1 },
+          },
+        },
+      ])
+      .toArray();
+
+    const priorityDistribution = priorityStats.reduce((acc, stat) => {
+      acc[stat._id || "Medium"] = stat.count;
+      return acc;
+    }, {});
+
+    return {
+      done: true,
+      data: {
+        total: stats.total,
+        completed: stats.completed,
+        pending: stats.pending,
+        completionRate: stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0,
+        priorityDistribution,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching todo statistics:", error);
+    return { done: false, error: error.message };
+  }
 };
