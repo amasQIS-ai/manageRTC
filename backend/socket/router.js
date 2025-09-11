@@ -9,6 +9,7 @@ import { ChatUsersController } from "../controllers/chat/users.controller.js";
 import userSocketController from "../controllers/user/user.socket.controller.js";
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import hrDashboardController from "../controllers/hr/hr.controller.js";
+import pipelineController from "../controllers/pipeline/pipeline.controllers.js";
 
 const router = (socket, io, role) => {
   console.log(`Setting up socket router for role: ${role}`);
@@ -16,7 +17,7 @@ const router = (socket, io, role) => {
     id: socket.id,
     role: socket.role,
     companyId: socket.companyId,
-    userMetadata: socket.userMetadata
+    userMetadata: socket.userMetadata,
   });
 
   // Initialize chat controller for all authenticated users
@@ -25,7 +26,6 @@ const router = (socket, io, role) => {
     new ChatController(socket, io);
     new ChatUsersController(socket, io);
   }
-
 
   switch (role) {
     case "superadmin":
@@ -50,6 +50,8 @@ const router = (socket, io, role) => {
       userSocketController(socket, io);
       console.log("Attaching social feed controller for admin...");
       socialFeedSocketController(socket, io);
+      // Pipelines JS
+      pipelineController(socket, io);
       break;
 
     case "hr":
@@ -78,7 +80,9 @@ const router = (socket, io, role) => {
       socialFeedSocketController(socket, io);
       break;
     default:
-      console.log(`No controller available for role: ${role}, attaching basic social feed for public access`);
+      console.log(
+        `No controller available for role: ${role}, attaching basic social feed for public access`
+      );
       socialFeedSocketController(socket, io);
       break;
   }

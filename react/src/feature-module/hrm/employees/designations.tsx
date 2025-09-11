@@ -1,5 +1,3 @@
-// designations
-
 import React, { useState, useEffect, useMemo } from 'react'
 import { all_routes } from '../../router/all_routes'
 import { Link } from 'react-router-dom'
@@ -441,19 +439,13 @@ const Designations = () => {
                   </Link>
                   <ul className="dropdown-menu  dropdown-menu-end p-3">
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-pdf me-1" />
                         Export as PDF
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-xls me-1" />
                         Export as Excel{" "}
                       </Link>
@@ -464,7 +456,8 @@ const Designations = () => {
               <div className="mb-2">
                 <Link
                   to="#"
-                  data-bs-toggle="modal" data-inert={true}
+                  data-bs-toggle="modal"
+                  data-inert={true}
                   data-bs-target="#add_designation"
                   className="btn btn-primary d-flex align-items-center"
                 >
@@ -589,7 +582,6 @@ const Designations = () => {
                       </Link>
                     </li>
                     <li>
-                      <Link
                         to="#"
                         className="dropdown-item rounded-1"
                         onClick={() => handleSort("")}
@@ -608,11 +600,11 @@ const Designations = () => {
           {/* /Performance Indicator list */}
         </div>
         <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © SmartHR.</p>
+          <p className="mb-0">2014 - 2025 © Amasqis.</p>
           <p>
             Designed &amp; Developed By{" "}
-            <Link to="#" className="text-primary">
-              Dreams
+            <Link to="https://amasqis.ai" className="text-primary">
+              Amasqis
             </Link>
           </p>
         </div>
@@ -675,7 +667,7 @@ const Designations = () => {
                     <div className="mb-3">
                       <label className="form-label">Status</label>
                       <CommonSelect
-                        className='select'
+                        className="select"
                         options={statusChoose}
                         defaultValue={statusChoose[0]}
                         onChange={(selectedValue) => {

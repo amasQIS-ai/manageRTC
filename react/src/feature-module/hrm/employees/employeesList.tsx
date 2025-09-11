@@ -129,7 +129,6 @@ const initialState = {
 };
 
 const EmployeeList = () => {
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic-info");
@@ -473,7 +472,6 @@ const EmployeeList = () => {
           <i className="ti ti-point-filled me-1" />
           {text}
         </span>
-
       ),
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
@@ -485,7 +483,8 @@ const EmployeeList = () => {
           <Link
             to="#"
             className="me-2"
-            data-bs-toggle="modal" data-inert={true}
+            data-bs-toggle="modal"
+            data-inert={true}
             data-bs-target="#edit_employee"
             onClick={() => { setEditingEmployee(employee) }}
           >
@@ -1121,7 +1120,10 @@ console.log("Helllo1");
                   >
                     <i className="ti ti-list-tree" />
                   </Link>
-                  <Link to={all_routes.employeeGrid} className="btn btn-icon btn-sm">
+                  <Link
+                    to={all_routes.employeeGrid}
+                    className="btn btn-icon btn-sm"
+                  >
                     <i className="ti ti-layout-grid" />
                   </Link>
                 </div>
@@ -1138,19 +1140,13 @@ console.log("Helllo1");
                   </Link>
                   <ul className="dropdown-menu  dropdown-menu-end p-3">
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-pdf me-1" />
                         Export as PDF
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-xls me-1" />
                         Export as Excel{" "}
                       </Link>
@@ -1161,7 +1157,8 @@ console.log("Helllo1");
               <div className="mb-2">
                 <Link
                   to="#"
-                  data-bs-toggle="modal" data-inert={true}
+                  data-bs-toggle="modal"
+                  data-inert={true}
                   data-bs-target="#add_employee"
                   className="btn btn-primary d-flex align-items-center"
                   onClick={() => generateId("EMP")}
@@ -1412,11 +1409,11 @@ console.log("Helllo1");
           </div>
         </div>
         <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © SmartHR.</p>
+          <p className="mb-0">2014 - 2025 © Amasqis.</p>
           <p>
             Designed &amp; Developed By{" "}
-            <Link to="#" className="text-primary">
-              Dreams
+            <Link to="https://amasqis.ai" className="text-primary">
+              Amasqis
             </Link>
           </p>
         </div>
@@ -1500,7 +1497,9 @@ console.log("Helllo1");
                           <div className="profile-upload">
                             <div className="mb-2">
                               <h6 className="mb-1">Upload Profile Image</h6>
-                              <p className="fs-12">Image should be below 4 mb</p>
+                              <p className="fs-12">
+                                Image should be below 4 mb
+                              </p>
                             </div>
                             <div className="profile-uploader d-flex align-items-center">
                               <div className="drag-upload-btn btn btn-sm btn-primary me-2">
@@ -1629,10 +1628,11 @@ console.log("Helllo1");
                               onChange={handleChange}
                             />
                             <span
-                              className={`ti toggle-passwords ${passwordVisibility.password
-                                ? "ti-eye"
-                                : "ti-eye-off"
-                                }`}
+                              className={`ti toggle-passwords ${
+                                passwordVisibility.password
+                                  ? "ti-eye"
+                                  : "ti-eye-off"
+                              }`}
                               onClick={() =>
                                 togglePasswordVisibility("password")
                               }
@@ -1643,7 +1643,8 @@ console.log("Helllo1");
                       <div className="col-md-6">
                         <div className="mb-3 ">
                           <label className="form-label">
-                            Confirm Password <span className="text-danger"> *</span>
+                            Confirm Password{" "}
+                            <span className="text-danger"> *</span>
                           </label>
                           <div className="pass-group">
                             <input
@@ -1658,10 +1659,11 @@ console.log("Helllo1");
                               onChange={e => setConfirmPassword(e.target.value)}
                             />
                             <span
-                              className={`ti toggle-passwords ${passwordVisibility.confirmPassword
-                                ? "ti-eye"
-                                : "ti-eye-off"
-                                }`}
+                              className={`ti toggle-passwords ${
+                                passwordVisibility.confirmPassword
+                                  ? "ti-eye"
+                                  : "ti-eye-off"
+                              }`}
                               onClick={() =>
                                 togglePasswordVisibility("confirmPassword")
                               }
@@ -1850,7 +1852,8 @@ console.log("Helllo1");
                     <button
                       type="submit"
                       className="btn btn-primary"
-                      data-bs-toggle="modal" data-inert={true}
+                      data-bs-toggle="modal"
+                      data-inert={true}
                       data-bs-target="#success_modal"
                     >
                       Save
@@ -1942,7 +1945,9 @@ console.log("Helllo1");
                           <div className="profile-upload">
                             <div className="mb-2">
                               <h6 className="mb-1">Upload Profile Image</h6>
-                              <p className="fs-12">Image should be below 4 mb</p>
+                              <p className="fs-12">
+                                Image should be below 4 mb
+                              </p>
                             </div>
                             <div className="profile-uploader d-flex align-items-center">
                               <div className="drag-upload-btn btn btn-sm btn-primary me-2">
@@ -2125,7 +2130,35 @@ console.log("Helllo1");
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">
-                            Company<span className="text-danger"> *</span>
+                            Confirm Password{" "}
+                            <span className="text-danger"> *</span>
+                          </label>
+                          <div className="pass-group">
+                            <input
+                              type={
+                                passwordVisibility.confirmPassword
+                                  ? "text"
+                                  : "password"
+                              }
+                              className="pass-input form-control"
+                            />
+                            <span
+                              className={`ti toggle-passwords ${
+                                passwordVisibility.confirmPassword
+                                  ? "ti-eye"
+                                  : "ti-eye-off"
+                              }`}
+                              onClick={() =>
+                                togglePasswordVisibility("confirmPassword")
+                              }
+                            ></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">
+                            Phone Number <span className="text-danger"> *</span>
                           </label>
                           <input
                             type="text"
@@ -2316,7 +2349,8 @@ console.log("Helllo1");
                     <button
                       type="button"
                       className="btn btn-primary"
-                      data-bs-toggle="modal" data-inert={true}
+                      data-bs-toggle="modal"
+                      data-inert={true}
                       data-bs-target="#success_modal"
                       onClick={handlePermissionUpdateSubmit}
                     >
@@ -2410,8 +2444,7 @@ console.log("Helllo1");
       </div>
       {/*delete policy*/}
     </>
+  );
+};
 
-  )
-}
-
-export default EmployeeList
+export default EmployeeList;

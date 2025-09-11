@@ -1,5 +1,3 @@
-// react/src/employees/departments.jsx
-
 import React, { useState, useEffect } from 'react'
 import { all_routes } from '../../router/all_routes'
 import { Link } from 'react-router-dom'
@@ -10,6 +8,7 @@ import CollapseHeader from '../../../core/common/collapse-header/collapse-header
 import { departmentName } from '../../../core/common/selectoption/selectoption';
 import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
+
 type PasswordField = "password" | "confirmPassword";
 
 interface Departments {
@@ -139,7 +138,6 @@ const Department = () => {
         <h6 className="fw-medium">
           <Link to="#">{text}</Link>
         </h6>
-
       ),
       sorter: (a: any, b: any) => a.Department.length - b.Department.length,
     },
@@ -156,7 +154,6 @@ const Department = () => {
           <i className="ti ti-point-filled me-1" />
           {text}
         </span>
-
       ),
       sorter: (a: any, b: any) => a.Status.length - b.Status.length,
     },
@@ -168,7 +165,8 @@ const Department = () => {
           <Link
             to="#"
             className="me-2"
-            data-bs-toggle="modal" data-inert={true}
+            data-bs-toggle="modal"
+            data-inert={true}
             data-bs-target="#edit_department"
             onClick={() => { setEditingDept(department) }}
           >
@@ -185,7 +183,6 @@ const Department = () => {
             <i className="ti ti-trash" />
           </Link>
         </div>
-
       ),
     },
   ]
@@ -346,7 +343,6 @@ const Department = () => {
       setLoading(false);
     }
   };
-
   return (
     <>
       {/* Page Wrapper */}
@@ -383,19 +379,13 @@ const Department = () => {
                   </Link>
                   <ul className="dropdown-menu  dropdown-menu-end p-3">
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-pdf me-1" />
                         Export as PDF
                       </Link>
                     </li>
                     <li>
-                      <Link
-                        to="#"
-                        className="dropdown-item rounded-1"
-                      >
+                      <Link to="#" className="dropdown-item rounded-1">
                         <i className="ti ti-file-type-xls me-1" />
                         Export as Excel{" "}
                       </Link>
@@ -406,7 +396,8 @@ const Department = () => {
               <div className="mb-2">
                 <Link
                   to="#"
-                  data-bs-toggle="modal" data-inert={true}
+                  data-bs-toggle="modal"
+                  data-inert={true}
                   data-bs-target="#add_department"
                   className="btn btn-primary d-flex align-items-center"
                 >
@@ -494,11 +485,11 @@ const Department = () => {
           {/* /Performance Indicator list */}
         </div>
         <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © SmartHR.</p>
+          <p className="mb-0">2014 - 2025 © Amasqis.</p>
           <p>
             Designed &amp; Developed By{" "}
-            <Link to="#" className="text-primary">
-              Dreams
+            <Link to="https://amasqis.ai" className="text-primary">
+              Amasqis
             </Link>
           </p>
         </div>
@@ -596,7 +587,7 @@ const Department = () => {
                     <div className="mb-3">
                       <label className="form-label">Status</label>
                       <CommonSelect
-                        className='select'
+                        className="select"
                         options={statusChoose}
                         defaultValue={statusChoose.find(d => d.value === editingDept?.status) || statusChoose[0].value}
                         onChange={(selectedOption) =>
@@ -679,8 +670,7 @@ const Department = () => {
       </div>
       {/*delete policy*/}
     </>
+  );
+};
 
-
-  )
-}
-export default Department
+export default Department;

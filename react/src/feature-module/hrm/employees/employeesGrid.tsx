@@ -947,19 +947,25 @@ const EmployeesGrid = () => {
                                 </div>
                             </div>
                             <div className="mb-2">
-                                <Link
-                                    to="#"
-                                    data-bs-toggle="modal" data-inert={true}
-                                    data-bs-target="#add_employee"
-                                    className="btn btn-primary d-flex align-items-center"
-                                >
-                                    <i className="ti ti-circle-plus me-2" />
-                                    Add Employee
-                                </Link>
+                              <h6 className="mb-1">Upload Profile Image</h6>
+                              <p className="fs-12">
+                                Image should be below 4 mb
+                              </p>
                             </div>
-                            <div className="head-icons ms-2">
-                                <CollapseHeader />
+                            <div className="profile-uploader d-flex align-items-center">
+                              <div className="drag-upload-btn btn btn-sm btn-primary me-2">
+                                Upload
+                                <input
+                                  type="file"
+                                  className="form-control image-sign"
+                                  multiple
+                                />
+                              </div>
+                              <Link to="#" className="btn btn-light btn-sm">
+                                Cancel
+                              </Link>
                             </div>
+                          </div>
                         </div>
                     </div>
                     {/* /Breadcrumb */}
@@ -1149,8 +1155,874 @@ const EmployeesGrid = () => {
                                 </div>
                             </div>
                         </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3 ">
+                          <label className="form-label">
+                            Password <span className="text-danger"> *</span>
+                          </label>
+                          <div className="pass-group">
+                            <input
+                              type="password"
+                              className="pass-input form-control"
+                            />
+                            <span className="ti toggle-password ti-eye-off" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3 ">
+                          <label className="form-label">
+                            Confirm Password{" "}
+                            <span className="text-danger"> *</span>
+                          </label>
+                          <div className="pass-group">
+                            <input
+                              type="password"
+                              className="pass-inputs form-control"
+                            />
+                            <span className="ti toggle-passwords ti-eye-off" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">
+                            Phone Number <span className="text-danger"> *</span>
+                          </label>
+                          <input type="text" className="form-control" />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">
+                            Company<span className="text-danger"> *</span>
+                          </label>
+                          <input type="text" className="form-control" />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">Department</label>
+                          <CommonSelect
+                            className="select"
+                            options={department}
+                            defaultValue={department[0]}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="mb-3">
+                          <label className="form-label">Designation</label>
+                          <CommonSelect
+                            className="select"
+                            options={designation}
+                            defaultValue={designation[0]}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-12">
+                        <div className="mb-3">
+                          <label className="form-label">
+                            About <span className="text-danger"> *</span>
+                          </label>
+                          <textarea
+                            className="form-control"
+                            rows={3}
+                            defaultValue={""}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    {/* Clients Grid */}
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline-light border me-2"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      data-bs-dismiss="modal"
+                      className="btn btn-primary"
+                    >
+                      Save{" "}
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className="tab-pane fade"
+                  id="address"
+                  role="tabpanel"
+                  aria-labelledby="address-tab"
+                  tabIndex={0}
+                >
+                  <div className="modal-body">
+                    <div className="card bg-light-500 shadow-none">
+                      <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                        <h6>Enable Options</h6>
+                        <div className="d-flex align-items-center justify-content-end">
+                          <div className="form-check form-switch me-2">
+                            <label className="form-check-label mt-0">
+                              <input
+                                className="form-check-input me-2"
+                                type="checkbox"
+                                role="switch"
+                              />
+                              Enable all Module
+                            </label>
+                          </div>
+                          <div className="form-check d-flex align-items-center">
+                            <label className="form-check-label mt-0">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                defaultChecked
+                              />
+                              Select All
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="table-responsive border rounded">
+                      <table className="table">
+                        <tbody>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                    defaultChecked
+                                  />
+                                  Holidays
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    defaultChecked
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    defaultChecked
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Leaves
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Clients
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Projects
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Tasks
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Chats
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                    defaultChecked
+                                  />
+                                  Assets
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    defaultChecked
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    defaultChecked
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <div className="form-check form-switch me-2">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input me-2"
+                                    type="checkbox"
+                                    role="switch"
+                                  />
+                                  Timing Sheets
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Read
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Write
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Create
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Delete
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Import
+                                </label>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="form-check d-flex align-items-center">
+                                <label className="form-check-label mt-0">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                  />
+                                  Export
+                                </label>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline-light border me-2"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      data-bs-toggle="modal"
+                      data-inert={true}
+                      data-bs-target="#success_modal"
+                    >
+                      Save{" "}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {/* /Add Employee */}
+      {/* Edit Employee */}
+      <div className="modal fade" id="edit_employee">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <div className="d-flex align-items-center">
+                <h4 className="modal-title me-2">Edit Employee</h4>
+                <span>Employee ID : EMP -0024</span>
+              </div>
+              <button
+                type="button"
+                className="btn-close custom-btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+            <form>
+              <div className="contact-grids-tab">
+                <ul className="nav nav-underline" id="myTab2" role="tablist">
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className="nav-link active"
+                      id="info-tab2"
+                      data-bs-toggle="tab"
+                      data-bs-target="#basic-info2"
+                      type="button"
+                      role="tab"
+                      aria-selected="true"
+                    >
+                      Basic Information
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className="nav-link"
+                      id="address-tab2"
+                      data-bs-toggle="tab"
+                      data-bs-target="#address2"
+                      type="button"
+                      role="tab"
+                      aria-selected="false"
+                    >
+                      Permissions
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div className="tab-content" id="myTabContent2">
+                <div
+                  className="tab-pane fade show active"
+                  id="basic-info2"
+                  role="tabpanel"
+                  aria-labelledby="info-tab2"
+                  tabIndex={0}
+                >
+                  <div className="modal-body pb-0 ">
                     <div className="row">
                         {/* <div className="col-md-12">
                             <div className="text-center mb-4"> */}
@@ -1733,6 +2605,23 @@ const EmployeesGrid = () => {
                             </div>
                         </form>
                     </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline-light border me-2"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      data-bs-dismiss="modal"
+                      className="btn btn-primary"
+                    >
+                      Save{" "}
+                    </button>
+                  </div>
                 </div>
             </div>
             {/* /Add Employee */}
@@ -2242,7 +3131,17 @@ const EmployeesGrid = () => {
                             </div>
                         </div>
                     </div>
+                    <div className="col-6">
+                      <Link
+                        to={all_routes.employeedetails}
+                        className="btn btn-primary w-100"
+                      >
+                        Detail Page
+                      </Link>
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
             {/* /Add Client Success */}
             {/* /Add Client Success */}
@@ -2292,4 +3191,5 @@ const EmployeesGrid = () => {
     )
 }
 
-export default EmployeesGrid
+
+export default EmployeesGrid;
