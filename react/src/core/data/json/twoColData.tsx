@@ -1638,6 +1638,102 @@ export const TowColData = [
                 route: routes.dragandDrop,
                 base: "ui-drag-drop",
               },
+            ],
+          },
+        ],
+      },
+      {
+        tittle: 'Hrm',
+        icon: 'file',
+        showAsTab: false,
+        separateRoute: false,
+        menu: [
+          {
+            menuValue: 'Hrm',
+            hasSubRouteTwo: true,
+            showSubRoute: false,
+            icon: 'user',
+            base: 'employees',
+            base2:'tickets',
+            base3:'holidays',
+            base4: 'attendance',
+            base5: 'performance',
+            base7: 'trainings',
+            materialicons: 'dashboard',
+            subMenus: [
+              {
+                menuValue: 'Employees',
+                route: routes.employeeList,
+                hasSubRoute: true,
+                customSubmenuTwo: true,
+                showSubRoute: false,
+                base: 'employees',
+                subMenusTwo: [
+                  {
+                    menuValue: 'Employees List',
+                    route: routes.employeeList,
+                    base: 'employees',
+                    base2: 'employee-list',
+                  },
+                  {
+                    menuValue: 'Employees Grid',
+                    route: routes.employeeGrid,
+                    base: 'employees',
+                    base2: 'employee-grid',
+                  },
+                  {
+                    menuValue: 'Employees Details',
+                    route: routes.employeeDetailPage,
+                    base: 'employees',
+                    base2: 'employee-details',
+                  },
+                  {
+                    menuValue: 'Departments',
+                    route: routes.departments,
+                    base: 'departments',
+                  },
+                  {
+                    menuValue: 'Designations',
+                    route: routes.designations,
+                    base: 'designations',
+                  },
+                  {
+                    menuValue: 'Policies',
+                    route: routes.policy,
+                    base: 'employees',
+                    base2: 'policy',
+                  },
+                ],
+              },
+              {
+                menuValue: 'Tickets',
+                route: routes.ticketList,
+                hasSubRoute: true,
+                showSubRoute: false,
+                customSubmenuTwo: true,
+                base: 'tickets',
+                subMenusTwo: [
+                  {
+                    menuValue: 'Tickets',
+                    route: routes.ticketList,
+                    base: 'tickets',
+                    base2:'ticket-list'
+                  },
+                  {
+                    menuValue: 'Tickets Detail',
+                    route: routes.ticketDetails,
+                    base: 'ticket-details',
+                  },
+                ],
+              },
+  
+              {
+                menuValue: 'Holidays',
+                route: routes.holidays,
+                base: 'holidays',
+                hasSubRoute: false,
+                showSubRoute: false,
+                customSubmenuTwo: false,
               {
                 menuValue: "Rating",
                 route: routes.rating,
