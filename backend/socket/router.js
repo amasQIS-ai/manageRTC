@@ -1,5 +1,6 @@
 import superAdminController from "../controllers/superadmin/superadmin.controller.js";
 import adminController from "../controllers/admin/admin.controller.js";
+import hrDashboardController from "../controllers/hr/hr.controller.js";
 import invoiceSocketController from "../controllers/invoice/invoice.socket.controller.js";
 import leadController from "../controllers/lead/lead.controller.js";
 import pipelineController from "../controllers/pipeline/pipeline.controllers.js";
