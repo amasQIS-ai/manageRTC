@@ -129,6 +129,10 @@ const initialState = {
 };
 
 const EmployeeList = () => {
+<<<<<<< HEAD
+=======
+
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic-info");
@@ -946,7 +950,7 @@ console.log("Helllo1");
         designationId,
         about,
       };
-console.log("Helllo1");
+
       // Prepare full submission data
       const submissionData = {
         employeeData: basicInfo,
@@ -2113,6 +2117,7 @@ console.log("Helllo1");
                         </div>
                       </div>
                       <div className="col-md-6">
+<<<<<<< HEAD
                         <div className="mb-3">
                           <label className="form-label">
                             Phone Number <span className="text-danger"> *</span>
@@ -2156,6 +2161,8 @@ console.log("Helllo1");
                         </div>
                       </div>
                       <div className="col-md-6">
+=======
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
                         <div className="mb-3">
                           <label className="form-label">
                             Phone Number <span className="text-danger"> *</span>
@@ -2444,7 +2451,8 @@ console.log("Helllo1");
       </div>
       {/*delete policy*/}
     </>
-  );
-};
 
-export default EmployeeList;
+  )
+}
+
+export default EmployeeList

@@ -419,6 +419,10 @@ const Policy = () => {
       setLoading(false);
     }
   };
+<<<<<<< HEAD
+=======
+
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
   return (
     <>
       {/* Page Wrapper */}
@@ -817,8 +821,13 @@ const Policy = () => {
       </div>
       {/*delete policy*/}
     </>
-  );
-};
 
+<<<<<<< HEAD
 export default Policy;
 
+=======
+  )
+}
+
+export default Policy;
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58

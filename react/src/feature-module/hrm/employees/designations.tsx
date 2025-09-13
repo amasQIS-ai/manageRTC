@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+// designations
+
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
 import React, { useState, useEffect, useMemo } from 'react'
 import { all_routes } from '../../router/all_routes'
 import { Link } from 'react-router-dom'
@@ -582,6 +587,10 @@ const Designations = () => {
                       </Link>
                     </li>
                     <li>
+<<<<<<< HEAD
+=======
+                      <Link
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
                         to="#"
                         className="dropdown-item rounded-1"
                         onClick={() => handleSort("")}
@@ -837,4 +846,8 @@ const Designations = () => {
     </>
   )
 }
+<<<<<<< HEAD
 export default Designations
+=======
+export default Designations
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58

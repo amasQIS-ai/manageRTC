@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+// react/src/employees/departments.jsx
+
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
 import React, { useState, useEffect } from 'react'
 import { all_routes } from '../../router/all_routes'
 import { Link } from 'react-router-dom'
@@ -343,6 +348,10 @@ const Department = () => {
       setLoading(false);
     }
   };
+<<<<<<< HEAD
+=======
+
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
   return (
     <>
       {/* Page Wrapper */}
@@ -619,7 +628,11 @@ const Department = () => {
                   }}
                   disabled={!editingDept}
                 >
+<<<<<<< HEAD
                   Update Policy
+=======
+                  Update
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
                 </button>
               </div>
             </form>
@@ -670,7 +683,12 @@ const Department = () => {
       </div>
       {/*delete policy*/}
     </>
-  );
-};
 
+<<<<<<< HEAD
 export default Department;
+=======
+
+  )
+}
+export default Department
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58

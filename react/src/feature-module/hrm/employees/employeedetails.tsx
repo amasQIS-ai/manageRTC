@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Link, useParams, } from 'react-router-dom'
 import PredefinedDateRanges from '../../../core/common/datePicker'
 import Table from "../../../core/common/dataTable/index";
-import { all_routes } from "../../router/all_routes";
-import ImageWithBasePath from "../../../core/common/imageWithBasePath";
-import { employeereportDetails } from "../../../core/data/json/employeereportDetails";
+import { all_routes } from '../../router/all_routes';
+import ImageWithBasePath from '../../../core/common/imageWithBasePath';
+import { employeereportDetails } from '../../../core/data/json/employeereportDetails';
 import { DatePicker, TimePicker } from "antd";
 import CommonSelect from '../../../core/common/commonSelect';
 import CollapseHeader from '../../../core/common/collapse-header/collapse-header';
@@ -174,7 +174,6 @@ const EmployeeDetails = () => {
         if (!socket || !employeeId) return;
 
         let isMounted = true;
-
         setLoading(true);
 
         const timeoutId = setTimeout(() => {
@@ -217,10 +216,18 @@ const EmployeeDetails = () => {
         return (
             <div className='alert alert-warning d-flex align-items-center justify-content-center pt-50 mt-5'>
                 <Link to={`/employees/`} className="btn btn-outline-primary btn-sm">
-                    Go to Employees List
+                    Select an employee from the Employees List
                 </Link>
             </div>
         )
+    }
+
+    if (loading) {
+        return <p className='text-center'>Loading employee data</p>
+    }
+
+    if (!employee) {
+        return <p className='text-center'>No Data found for this employee</p>
     }
 
     const togglePasswordVisibility = (field: PasswordField) => {
@@ -230,6 +237,7 @@ const EmployeeDetails = () => {
         }));
     };
 
+<<<<<<< HEAD
   const data = employeereportDetails;
   const columns = [
     {
@@ -331,6 +339,62 @@ const EmployeeDetails = () => {
 //     { value: "Maternity Benefit ", label: "Maternity Benefit " },
 //   ];
 
+=======
+    const getModalContainer = () => {
+        const modalElement = document.getElementById('modal-datepicker');
+        return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    };
+    const getModalContainer2 = () => {
+        const modalElement = document.getElementById('modal_datepicker');
+        return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    };
+
+    const data = employeereportDetails;
+    const columns = [
+        {
+            title: "Name",
+            dataIndex: "Name",
+            render: (text: String, record: any) => (
+                <Link to={all_routes.employeedetails} className="link-default">Emp-001</Link>
+
+            ),
+            sorter: (a: any, b: any) => a.Name.length - b.Name.length,
+        },
+        {
+            title: "Email",
+            dataIndex: "Email",
+            sorter: (a: any, b: any) => a.Email.length - b.Email.length,
+        },
+        {
+            title: "Created Date",
+            dataIndex: "CreatedDate",
+            sorter: (a: any, b: any) => a.CreatedDate.length - b.CreatedDate.length,
+        },
+        {
+            title: "Role",
+            dataIndex: "Role",
+            render: (text: String, record: any) => (
+                <span className={`badge d-inline-flex align-items-center badge-xs ${text === 'Employee' ? 'badge-pink-transparent' : 'badge-soft-purple'}`}>
+                    {text}
+                </span>
+
+            ),
+            sorter: (a: any, b: any) => a.Role.length - b.Role.length,
+        },
+        {
+            title: "Status",
+            dataIndex: "Status",
+            render: (text: String, record: any) => (
+                <span className={`badge d-inline-flex align-items-center badge-xs ${text === 'Active' ? 'badge-success' : 'badge-danger'}`}>
+                    <i className="ti ti-point-filled me-1" />
+                    {text}
+                </span>
+
+            ),
+            sorter: (a: any, b: any) => a.Status.length - b.Status.length,
+        },
+    ]
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
 
     const departmentChoose = [
         { value: "Select", label: "Select" },
@@ -842,7 +906,7 @@ const EmployeeDetails = () => {
                                             </h5>
                                             <span className="badge badge-soft-dark fw-medium me-2">
                                                 <i className="ti ti-point-filled me-1" />
-                                                {employee?.role}
+                                                {employee?.role || 'employee'}
                                             </span>
                                             <span className="badge badge-soft-secondary fw-medium">
                                                 <i className="ti ti-point-filled me-1" />
@@ -1139,7 +1203,7 @@ const EmployeeDetails = () => {
                             </div>
                             <div className="card">
                                 <div className="card-body p-0">
-                                    {employee?.emergencyContacts.map((contact, index) => {
+                                    {employee?.emergencyContacts?.map((contact, index) => {
                                         const label = index === 0 ? "Primary" : "Secondary";
                                         return (
                                             <div key={index} className="p-3 border-bottom">
@@ -1633,7 +1697,7 @@ const EmployeeDetails = () => {
                                                             tabIndex={0}
                                                         >
                                                             <div className="row">
-                                                                {employee?.assets.map((asset, idx) => (
+                                                                {employee?.assets?.map((asset, idx) => (
                                                                     <div key={idx} className="col-md-12 d-flex mb-3">
                                                                         <div className="card flex-fill">
                                                                             <div className="card-body">
@@ -1734,20 +1798,1940 @@ const EmployeeDetails = () => {
                                                 </div>
                                             </div>
                                         </div>
+<<<<<<< HEAD
                                       </div>
+=======
                                     </div>
-                                  </div>
                                 </div>
-                              </div>
                             </div>
-                          </div>
                         </div>
-                      </div>
                     </div>
-                  </div>
                 </div>
-              </div>
+                <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
+                    <p className="mb-0">2014 - 2025 © SmartHR.</p>
+                    <p>
+                        Designed &amp; Developed By{" "}
+                        <Link to="#" className="text-primary">
+                            Dreams
+                        </Link>
+                    </p>
+                </div>
             </div>
+            {/* /Page Wrapper */}
+            {/* Edit Employee */}
+            <div className="modal fade" id="edit_employee">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <div className="d-flex align-items-center">
+                                <h4 className="modal-title me-2">Edit Employee</h4>
+                                <span>Employee ID : EMP -0024</span>
+                            </div>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="contact-grids-tab">
+                                <ul className="nav nav-underline" id="myTab2" role="tablist">
+                                    <li className="nav-item" role="presentation">
+                                        <button
+                                            className="nav-link active"
+                                            id="info-tab3"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#basic-info3"
+                                            type="button"
+                                            role="tab"
+                                            aria-selected="true"
+                                        >
+                                            Basic Information
+                                        </button>
+                                    </li>
+                                    <li className="nav-item" role="presentation">
+                                        <button
+                                            className="nav-link"
+                                            id="address-tab3"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#address3"
+                                            type="button"
+                                            role="tab"
+                                            aria-selected="false"
+                                        >
+                                            Permissions
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="tab-content" id="myTabContent2">
+                                <div
+                                    className="tab-pane fade show active"
+                                    id="basic-info3"
+                                    role="tabpanel"
+                                    aria-labelledby="info-tab3"
+                                    tabIndex={0}
+                                >
+                                    <div className="modal-body pb-0 ">
+                                        <div className="row">
+                                            <div className="col-md-12">
+                                                <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
+                                                    <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
+                                                        <ImageWithBasePath
+                                                            src="assets/img/users/user-13.jpg"
+                                                            alt="img"
+                                                            className="rounded-circle"
+                                                        />
+                                                    </div>
+                                                    <div className="profile-upload">
+                                                        <div className="mb-2">
+                                                            <h6 className="mb-1">Upload Profile Image</h6>
+                                                            <p className="fs-12">Image should be below 4 mb</p>
+                                                        </div>
+                                                        <div className="profile-uploader d-flex align-items-center">
+                                                            <div className="drag-upload-btn btn btn-sm btn-primary me-2">
+                                                                Upload
+                                                                <input
+                                                                    type="file"
+                                                                    className="form-control image-sign"
+                                                                    multiple
+                                                                />
+                                                            </div>
+                                                            <Link
+                                                                to="#"
+                                                                className="btn btn-light btn-sm"
+                                                            >
+                                                                Cancel
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        First Name <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        defaultValue="Anthony"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Last Name</label>
+                                                    <input
+                                                        type="email"
+                                                        className="form-control"
+                                                        defaultValue="Lewis"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Employee ID <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        defaultValue="Emp-001"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Joining Date <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <div className="input-icon-end position-relative">
+                                                        <DatePicker
+                                                            className="form-control datetimepicker"
+                                                            format={{
+                                                                format: "DD-MM-YYYY",
+                                                                type: "mask",
+                                                            }}
+                                                            getPopupContainer={getModalContainer}
+                                                            placeholder="DD-MM-YYYY"
+                                                        />
+                                                        <span className="input-icon-addon">
+                                                            <i className="ti ti-calendar text-gray-7" />
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Username <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        defaultValue="Anthony"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Email <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="email"
+                                                        className="form-control"
+                                                        defaultValue="anthony@example.com	"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3 ">
+                                                    <label className="form-label">
+                                                        Password <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <div className="pass-group">
+                                                        <input
+                                                            type={
+                                                                passwordVisibility.password
+                                                                    ? "text"
+                                                                    : "password"
+                                                            }
+                                                            className="pass-input form-control"
+                                                        />
+                                                        <span
+                                                            className={`ti toggle-passwords ${passwordVisibility.password
+                                                                ? "ti-eye"
+                                                                : "ti-eye-off"
+                                                                }`}
+                                                            onClick={() =>
+                                                                togglePasswordVisibility("password")
+                                                            }
+                                                        ></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3 ">
+                                                    <label className="form-label">
+                                                        Confirm Password <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <div className="pass-group">
+                                                        <input
+                                                            type={
+                                                                passwordVisibility.confirmPassword
+                                                                    ? "text"
+                                                                    : "password"
+                                                            }
+                                                            className="pass-input form-control"
+                                                        />
+                                                        <span
+                                                            className={`ti toggle-passwords ${passwordVisibility.confirmPassword
+                                                                ? "ti-eye"
+                                                                : "ti-eye-off"
+                                                                }`}
+                                                            onClick={() =>
+                                                                togglePasswordVisibility("confirmPassword")
+                                                            }
+                                                        ></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Phone Number <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        defaultValue="(123) 4567 890"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        Company<span className="text-danger"> *</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control"
+                                                        defaultValue="Abac Company"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Department</label>
+                                                    <CommonSelect
+                                                        className='select'
+                                                        options={departmentChoose}
+                                                        defaultValue={departmentChoose[1]}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <div className="mb-3">
+                                                    <label className="form-label">Designation</label>
+                                                    <CommonSelect
+                                                        className='select'
+                                                        options={designationChoose}
+                                                        defaultValue={designationChoose[1]}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-12">
+                                                <div className="mb-3">
+                                                    <label className="form-label">
+                                                        About <span className="text-danger"> *</span>
+                                                    </label>
+                                                    <textarea
+                                                        className="form-control"
+                                                        rows={3}
+                                                        defaultValue={
+                                                            "As an award winning designer, I deliver exceptional quality work and bring value to your brand! With 10 years of experience and 350+ projects completed worldwide with satisfied customers, I developed the 360° brand approach, which helped me to create numerous brands that are relevant, meaningful and loved.\n\t\t\t\t\t\t\t\t\t\t\t\t\t"
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-light border me-2"
+                                            data-bs-dismiss="modal"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                            Save{" "}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    className="tab-pane fade"
+                                    id="address3"
+                                    role="tabpanel"
+                                    aria-labelledby="address-tab3"
+                                    tabIndex={0}
+                                >
+                                    <div className="modal-body">
+                                        <div className="card bg-light-500 shadow-none">
+                                            <div className="card-body d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                                                <h6>Enable Options</h6>
+                                                <div className="d-flex align-items-center justify-content-end">
+                                                    <div className="form-check form-switch me-2">
+                                                        <label className="form-check-label mt-0">
+                                                            <input
+                                                                className="form-check-input me-2"
+                                                                type="checkbox"
+                                                                role="switch"
+                                                            />
+                                                            Enable all Module
+                                                        </label>
+                                                    </div>
+                                                    <div className="form-check d-flex align-items-center">
+                                                        <label className="form-check-label mt-0">
+                                                            <input
+                                                                className="form-check-input"
+                                                                type="checkbox"
+                                                                defaultChecked
+                                                            />
+                                                            Select All
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="table-responsive border rounded">
+                                            <table className="table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Holidays
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Leaves
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Clients
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Projects
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Tasks
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Chats
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Assets
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                        defaultChecked
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div className="form-check form-switch me-2">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input me-2"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                    />
+                                                                    Timing Sheets
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Read
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Write
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Create
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Delete
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Import
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="form-check d-flex align-items-center">
+                                                                <label className="form-check-label mt-0">
+                                                                    <input
+                                                                        className="form-check-input"
+                                                                        type="checkbox"
+                                                                    />
+                                                                    Export
+                                                                </label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-light border me-2"
+                                            data-bs-dismiss="modal"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            data-bs-toggle="modal" data-inert={true}
+                                            data-bs-target="#success_modal"
+                                        >
+                                            Save{" "}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Edit Employee */}
+            {/* Edit Personal */}
+            <div className="modal fade" id="edit_personal">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Edit Personal Info</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Passport No <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Passport Expiry Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Nationality <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Religion</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Marital status <span className="text-danger"> *</span>
+                                            </label>
+                                            <CommonSelect
+                                                className='select'
+                                                options={martialstatus}
+                                                defaultValue={martialstatus[0]}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Employment spouse</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">No. of children</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Edit Personal */}
+            {/* Edit Emergency Contact */}
+            <div className="modal fade" id="edit_emergency">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Emergency Contact Details</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="border-bottom mb-3 ">
+                                    <div className="row">
+                                        <h5 className="mb-3">Secondary Contact Details</h5>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">
+                                                    Name <span className="text-danger"> *</span>
+                                                </label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Relationship </label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">
+                                                    Phone No 1 <span className="text-danger"> *</span>
+                                                </label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Phone No 2 </label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="row">
+                                    <h5 className="mb-3">Secondary Contact Details</h5>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Name <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Relationship </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Phone No 1 <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Phone No 2 </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Edit Emergency Contact */}
+            {/* Edit Bank */}
+            <div className="modal fade" id="edit_bank">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Bank Details</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Bank Details <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">Bank account No </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">IFSC Code</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">Branch Address</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Edit Bank */}
+            {/* Add Family */}
+            <div className="modal fade" id="edit_familyinformation">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Family Information</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Name <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">Relationship </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">Phone </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Passport Expiry Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Add Family */}
+            {/* Add Education */}
+            <div className="modal fade" id="edit_education">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Education Information</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Institution Name <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Course <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Start Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                End Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Add Education */}
+            {/* Add Experience */}
+            <div className="modal fade" id="edit_experience">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Company Information</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Previous Company Name{" "}
+                                                <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Designation <span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Start Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                End Date <span className="text-danger"> *</span>
+                                            </label>
+                                            <div className="input-icon-end position-relative">
+                                                <DatePicker
+                                                    className="form-control datetimepicker"
+                                                    format={{
+                                                        format: "DD-MM-YYYY",
+                                                        type: "mask",
+                                                    }}
+                                                    getPopupContainer={getModalContainer}
+                                                    placeholder="DD-MM-YYYY"
+                                                />
+                                                <span className="input-icon-addon">
+                                                    <i className="ti ti-calendar text-gray-7" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-check-label d-flex align-items-center mt-0">
+                                                <input
+                                                    className="form-check-input mt-0 me-2"
+                                                    type="checkbox"
+                                                    defaultChecked
+                                                />
+                                                <span className="text-dark">
+                                                    Check if you working present
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Add Experience */}
+            {/* Add Employee Success */}
+            <div className="modal fade" id="success_modal" role="dialog">
+                <div className="modal-dialog modal-dialog-centered modal-sm">
+                    <div className="modal-content">
+                        <div className="modal-body">
+                            <div className="text-center p-3">
+                                <span className="avatar avatar-lg avatar-rounded bg-success mb-3">
+                                    <i className="ti ti-check fs-24" />
+                                </span>
+                                <h5 className="mb-2">Employee Added Successfully</h5>
+                                <p className="mb-3">
+                                    Stephan Peralt has been added with Client ID :{" "}
+                                    <span className="text-primary">#EMP - 0001</span>
+                                </p>
+                                <div>
+                                    <div className="row g-2">
+                                        <div className="col-6">
+                                            <Link to={all_routes.employeeList} className="btn btn-dark w-100">
+                                                Back to List
+                                            </Link>
+                                        </div>
+                                        <div className="col-6">
+                                            <Link
+                                                to={all_routes.employeedetails}
+                                                className="btn btn-primary w-100"
+                                            >
+                                                Detail Page
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* /Add Client Success */}
+            {/* Add Statuorty */}
+            <div className="modal fade" id="add_bank_satutory">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Bank &amp; Statutory</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="border-bottom mb-4">
+                                    <h5 className="mb-3">Basic Salary Information</h5>
+                                    <div className="row mb-2">
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">
+                                                    Salary basis <span className="text-danger"> *</span>
+                                                </label>
+                                                <CommonSelect
+                                                    className='select'
+                                                    options={salaryChoose}
+                                                    defaultValue={salaryChoose[0]}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">Salary basis</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    defaultValue="$"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">Payment type</label>
+                                                <CommonSelect
+                                                    className='select'
+                                                    options={paymenttype}
+                                                    defaultValue={paymenttype[0]}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="border-bottom mb-4">
+                                    <h5 className="mb-3">PF Information</h5>
+                                    <div className="row mb-2">
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">
+                                                    PF contribution <span className="text-danger"> *</span>
+                                                </label>
+                                                <CommonSelect
+                                                    className='select'
+                                                    options={pfcontribution}
+                                                    defaultValue={pfcontribution[0]}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">PF No</label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-4">
+                                            <div className="mb-3">
+                                                <label className="form-label">Employee PF rate</label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Additional rate</label>
+                                                <CommonSelect
+                                                    className='select'
+                                                    options={additionalrate}
+                                                    defaultValue={additionalrate[0]}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="mb-3">
+                                                <label className="form-label">Total rate</label>
+                                                <input type="text" className="form-control" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h5 className="mb-3">ESI Information</h5>
+                                <div className="row">
+                                    <div className="col-md-4">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                ESI contribution<span className="text-danger"> *</span>
+                                            </label>
+                                            <CommonSelect
+                                                className='select'
+                                                options={esi}
+                                                defaultValue={esi[0]}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-4">
+                                        <div className="mb-3">
+                                            <label className="form-label">ESI Number</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-4">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Employee ESI rate<span className="text-danger"> *</span>
+                                            </label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Additional rate</label>
+                                            <CommonSelect
+                                                className='select'
+                                                options={additionalrate}
+                                                defaultValue={additionalrate[0]}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="mb-3">
+                                            <label className="form-label">Total rate</label>
+                                            <input type="text" className="form-control" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {/* /Add Statuorty */}
+            {/* Asset Information */}
+            <div className="modal fade" id="asset_info">
+                <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Asset Information</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="bg-light p-3 rounded d-flex align-items-center mb-3">
+                                <span className="avatar avatar-lg flex-shrink-0 me-2">
+                                    <ImageWithBasePath
+                                        src="assets/img/laptop.jpg"
+                                        alt="img"
+                                        className="ig-fluid rounded-circle"
+                                    />
+                                </span>
+                                <div>
+                                    <h6>Dell Laptop - #343556656</h6>
+                                    <p className="fs-13">
+                                        <span className="text-primary">AST - 001 </span>
+                                        <i className="ti ti-point-filled text-primary" /> Assigned on 22
+                                        Nov, 2022 10:32AM
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="row">
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Type</p>
+                                        <p className="text-gray-9">Laptop</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Brand</p>
+                                        <p className="text-gray-9">Dell</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Category</p>
+                                        <p className="text-gray-9">Computer</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Serial No</p>
+                                        <p className="text-gray-9">3647952145678</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Cost</p>
+                                        <p className="text-gray-9">$800</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Vendor</p>
+                                        <p className="text-gray-9">Compusoft Systems Ltd.,</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Warranty</p>
+                                        <p className="text-gray-9">12 Jan 2022 - 12 Jan 2026</p>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="mb-3">
+                                        <p className="fs-13 mb-0">Location</p>
+                                        <p className="text-gray-9">46 Laurel Lane, TX 79701</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="fs-13 mb-2">Asset Images</p>
+                                <div className="d-flex align-items-center">
+                                    <ImageWithBasePath
+                                        src="assets/img/laptop-01.jpg"
+                                        alt="img"
+                                        className="img-fluid rounded me-2"
+                                    />
+                                    <ImageWithBasePath
+                                        src="assets/img/laptop-2.jpg"
+                                        alt="img"
+                                        className="img-fluid rounded me-2"
+                                    />
+                                    <ImageWithBasePath
+                                        src="assets/img/laptop-3.jpg"
+                                        alt="img"
+                                        className="img-fluid rounded"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* /Asset Information */}
+            {/* Refuse */}
+            <div className="modal fade" id="refuse_msg">
+                <div className="modal-dialog modal-dialog-centered modal-md">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h4 className="modal-title">Raise Issue</h4>
+                            <button
+                                type="button"
+                                className="btn-close custom-btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                <i className="ti ti-x" />
+                            </button>
+                        </div>
+                        <form>
+                            <div className="modal-body pb-0">
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <div className="mb-3">
+                                            <label className="form-label">
+                                                Description<span className="text-danger"> *</span>
+                                            </label>
+                                            <textarea
+                                                className="form-control"
+                                                rows={4}
+                                                defaultValue={""}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-white border me-2"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                                    Submit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+<<<<<<< HEAD
           </div>
         </div>
         <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
@@ -3573,9 +5557,15 @@ const EmployeeDetails = () => {
                 <i className="ti ti-x" />
               </button>
             </div>
+=======
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
             {/* /Refuse */}
         </>
     )
 }
 
+<<<<<<< HEAD
 export default EmployeeDetails;
+=======
+export default EmployeeDetails
+>>>>>>> d53c175a82728661580fe6893cec9eb4e5b33b58
