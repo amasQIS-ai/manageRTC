@@ -1,0 +1,515 @@
+import { getTenantCollections } from "../../config/db.js";
+import { ObjectId } from "mongodb";
+import PDFDocument from "pdfkit";
+import ExcelJS from "exceljs";
+import fs from "fs";
+import path from "path";
+import { format } from "date-fns";
+
+// Create new candidate
+export const createCandidate = async (companyId, candidateData) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] createCandidate", { companyId, candidateData });
+
+    const newCandidate = {
+      ...candidateData,
+      companyId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: candidateData.status || "Applied",
+      isDeleted: false,
+      appliedDate: candidateData.appliedDate || new Date(),
+      candidateId: `CAND-${Math.floor(100 + Math.random() * 900)}`
+    };
+
+    const result = await collections.candidates.insertOne(newCandidate);
+    console.log("[CandidateService] insertOne result", { result });
+
+    if (result.insertedId) {
+      const inserted = await collections.candidates.findOne({
+        _id: result.insertedId,
+      });
+      console.log("[CandidateService] inserted candidate", { inserted });
+      return { done: true, data: inserted };
+    } else {
+      console.error("[CandidateService] Failed to insert candidate");
+      return { done: false, error: "Failed to insert candidate" };
+    }
+  } catch (error) {
+    console.error("[CandidateService] Error in createCandidate", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Get all candidates with filters
+export const getCandidates = async (companyId, filters = {}) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] getCandidates", { companyId, filters });
+
+    const query = { companyId, isDeleted: { $ne: true } };
+
+    // Apply filters
+    if (filters.status && filters.status !== "All") {
+      query.status = filters.status;
+    }
+
+    // Search filter
+    if (filters.search) {
+      query.$or = [
+        { firstName: { $regex: filters.search, $options: "i" } },
+        { lastName: { $regex: filters.search, $options: "i" } },
+        { email: { $regex: filters.search, $options: "i" } },
+        { candidateId: { $regex: filters.search, $options: "i" } },
+        { appliedRole: { $regex: filters.search, $options: "i" } }
+      ];
+    }
+
+    // Sort options
+    let sort = { createdAt: -1 };
+    if (filters.sortBy) {
+      sort = { [filters.sortBy]: filters.sortOrder === "asc" ? 1 : -1 };
+    }
+
+    console.log("[CandidateService] Final query", { query, sort });
+    const candidates = await collections.candidates.find(query).sort(sort).toArray();
+    console.log("[CandidateService] found candidates", { count: candidates.length });
+
+    // Ensure dates are properly converted to Date objects
+    const processedCandidates = candidates.map((candidate) => ({
+      ...candidate,
+      createdAt: candidate.createdAt ? new Date(candidate.createdAt) : null,
+      updatedAt: candidate.updatedAt ? new Date(candidate.updatedAt) : null,
+      appliedDate: candidate.appliedDate ? new Date(candidate.appliedDate) : null
+    }));
+
+    return { done: true, data: processedCandidates };
+  } catch (error) {
+    console.error("[CandidateService] Error in getCandidates", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Get single candidate by ID
+export const getCandidateById = async (companyId, candidateId) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] getCandidateById", { companyId, candidateId });
+
+    const candidate = await collections.candidates.findOne({
+      _id: new ObjectId(candidateId),
+      companyId,
+      isDeleted: { $ne: true },
+    });
+
+    if (!candidate) {
+      console.error("[CandidateService] Candidate not found", { candidateId });
+      return { done: false, error: "Candidate not found" };
+    }
+
+    // Ensure dates are properly converted to Date objects
+    const processedCandidate = {
+      ...candidate,
+      createdAt: candidate.createdAt ? new Date(candidate.createdAt) : null,
+      updatedAt: candidate.updatedAt ? new Date(candidate.updatedAt) : null,
+      appliedDate: candidate.appliedDate ? new Date(candidate.appliedDate) : null
+    };
+
+    return { done: true, data: processedCandidate };
+  } catch (error) {
+    console.error("[CandidateService] Error in getCandidateById", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Update candidate
+export const updateCandidate = async (companyId, candidateId, updateData) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] updateCandidate", { companyId, candidateId, updateData });
+
+    // Don't allow updating companyId or _id
+    const { companyId: _, _id, ...cleanUpdateData } = updateData;
+
+    const result = await collections.candidates.findOneAndUpdate(
+      {
+        _id: new ObjectId(candidateId),
+        companyId,
+        isDeleted: { $ne: true },
+      },
+      {
+        $set: {
+          ...cleanUpdateData,
+          updatedAt: new Date(),
+        },
+      },
+      { returnDocument: "after" }
+    );
+
+    if (!result.value) {
+      console.error("[CandidateService] Candidate not found for update", { candidateId });
+      return { done: false, error: "Candidate not found" };
+    }
+
+    return { done: true, data: result.value };
+  } catch (error) {
+    console.error("[CandidateService] Error in updateCandidate", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Delete candidate (soft delete)
+export const deleteCandidate = async (companyId, candidateId) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] deleteCandidate", { companyId, candidateId });
+
+    const result = await collections.candidates.updateOne(
+      {
+        _id: new ObjectId(candidateId),
+        companyId,
+        isDeleted: { $ne: true },
+      },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.error("[CandidateService] Candidate not found for deletion", { candidateId });
+      return { done: false, error: "Candidate not found" };
+    }
+
+    return { done: true, data: { _id: candidateId } };
+  } catch (error) {
+    console.error("[CandidateService] Error in deleteCandidate", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Get candidate statistics
+export const getCandidateStats = async (companyId) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] getCandidateStats", { companyId });
+
+    const pipeline = [
+      {
+        $match: {
+          companyId,
+          isDeleted: { $ne: true },
+        },
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ];
+
+    const stats = await collections.candidates.aggregate(pipeline).toArray();
+    
+    // Convert to a more usable format
+    const statsMap = {};
+    let total = 0;
+    
+    stats.forEach((stat) => {
+      statsMap[stat._id] = stat.count;
+      total += stat.count;
+    });
+
+    return {
+      done: true,
+      data: {
+        total,
+        byStatus: statsMap,
+        stats
+      },
+    };
+  } catch (error) {
+    console.error("[CandidateService] Error in getCandidateStats", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Update candidate status
+export const updateCandidateStatus = async (companyId, candidateId, status) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] updateCandidateStatus", { companyId, candidateId, status });
+
+    const result = await collections.candidates.findOneAndUpdate(
+      {
+        _id: new ObjectId(candidateId),
+        companyId,
+        isDeleted: { $ne: true },
+      },
+      {
+        $set: {
+          status,
+          updatedAt: new Date(),
+        },
+      },
+      { returnDocument: "after" }
+    );
+
+    if (!result.value) {
+      console.error("[CandidateService] Candidate not found for status update", { candidateId });
+      return { done: false, error: "Candidate not found" };
+    }
+
+    return { done: true, data: result.value };
+  } catch (error) {
+    console.error("[CandidateService] Error in updateCandidateStatus", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Export candidates as PDF
+export const exportCandidatesPDF = async (companyId, filters = {}) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] exportCandidatesPDF", { companyId, filters });
+
+    // Get candidates based on filters
+    const query = { companyId, isDeleted: { $ne: true } };
+    if (filters.status && filters.status !== "All") {
+      query.status = filters.status;
+    }
+
+    const candidates = await collections.candidates.find(query).toArray();
+
+    // Create a new PDF document
+    const doc = new PDFDocument();
+    const filePath = path.join(
+      __dirname,
+      `../../../temp/candidates_export_${Date.now()}.pdf`
+    );
+
+    // Ensure the temp directory exists
+    if (!fs.existsSync(path.dirname(filePath))) {
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    }
+
+    // Pipe the PDF to a file
+    const writeStream = fs.createWriteStream(filePath);
+    doc.pipe(writeStream);
+
+    // Add content to the PDF
+    doc.fontSize(20).text("Candidates Export", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(`Generated on: ${new Date().toLocaleString()}`);
+    doc.moveDown();
+
+    // Add a table of candidates
+    const table = {
+      headers: ["ID", "Name", "Email", "Role", "Status", "Applied Date"],
+      rows: candidates.map((candidate) => [
+        candidate.candidateId,
+        `${candidate.firstName} ${candidate.lastName}`,
+        candidate.email,
+        candidate.appliedRole,
+        candidate.status,
+        candidate.appliedDate ? new Date(candidate.appliedDate).toLocaleDateString() : "N/A",
+      ]),
+    };
+
+    // Draw the table
+    const startY = doc.y;
+    const startX = 50;
+    const cellPadding = 10;
+    const rowHeight = 20;
+    const colWidths = [60, 100, 150, 100, 80, 80];
+
+    // Draw headers
+    let x = startX;
+    table.headers.forEach((header, i) => {
+      doc.rect(x, startY, colWidths[i], rowHeight).stroke();
+      doc.font('Helvetica-Bold').text(header, x + cellPadding, startY + 5, {
+        width: colWidths[i] - cellPadding * 2,
+        align: 'left'
+      });
+      x += colWidths[i];
+    });
+
+    // Draw rows
+    let y = startY + rowHeight;
+    table.rows.forEach((row) => {
+      x = startX;
+      row.forEach((cell, i) => {
+        doc.rect(x, y, colWidths[i], rowHeight).stroke();
+        doc.font('Helvetica').text(cell || "", x + cellPadding, y + 5, {
+          width: colWidths[i] - cellPadding * 2,
+          align: 'left'
+        });
+        x += colWidths[i];
+      });
+      y += rowHeight;
+    });
+
+    // Finalize the PDF
+    doc.end();
+
+    // Wait for the write stream to finish
+    await new Promise((resolve) => writeStream.on("finish", resolve));
+
+    // Read the file and return as base64
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString("base64");
+
+    // Clean up the temporary file
+    fs.unlinkSync(filePath);
+
+    return {
+      done: true,
+      data: {
+        filename: `candidates_export_${new Date().toISOString().split('T')[0]}.pdf`,
+        mimeType: "application/pdf",
+        data: base64Data,
+      },
+    };
+  } catch (error) {
+    console.error("[CandidateService] Error in exportCandidatesPDF", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
+
+// Export candidates as Excel
+export const exportCandidatesExcel = async (companyId, filters = {}) => {
+  try {
+    const collections = getTenantCollections(companyId);
+    console.log("[CandidateService] exportCandidatesExcel", { companyId, filters });
+
+    // Get candidates based on filters
+    const query = { companyId, isDeleted: { $ne: true } };
+    if (filters.status && filters.status !== "All") {
+      query.status = filters.status;
+    }
+
+    const candidates = await collections.candidates.find(query).toArray();
+
+    // Create a new workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Candidates");
+
+    // Define the columns
+    worksheet.columns = [
+      { header: "ID", key: "candidateId", width: 15 },
+      { header: "First Name", key: "firstName", width: 20 },
+      { header: "Last Name", key: "lastName", width: 20 },
+      { header: "Email", key: "email", width: 30 },
+      { header: "Phone", key: "phone", width: 20 },
+      { header: "Applied Role", key: "appliedRole", width: 25 },
+      { header: "Status", key: "status", width: 15 },
+      { header: "Applied Date", key: "appliedDate", width: 15 },
+      { header: "Experience", key: "experience", width: 10 },
+      { header: "Current Company", key: "currentCompany", width: 25 },
+      { header: "Notice Period", key: "noticePeriod", width: 15 },
+      { header: "Current CTC", key: "currentCTC", width: 15 },
+      { header: "Expected CTC", key: "expectedCTC", width: 15 },
+      { header: "Location", key: "location", width: 20 },
+      { header: "Skills", key: "skills", width: 40 },
+    ];
+
+    // Add data to the worksheet
+    candidates.forEach((candidate) => {
+      worksheet.addRow({
+        candidateId: candidate.candidateId,
+        firstName: candidate.firstName || "",
+        lastName: candidate.lastName || "",
+        email: candidate.email || "",
+        phone: candidate.phone || "",
+        appliedRole: candidate.appliedRole || "",
+        status: candidate.status || "",
+        appliedDate: candidate.appliedDate ? new Date(candidate.appliedDate).toLocaleDateString() : "",
+        experience: candidate.experience || "",
+        currentCompany: candidate.currentCompany || "",
+        noticePeriod: candidate.noticePeriod || "",
+        currentCTC: candidate.currentCTC || "",
+        expectedCTC: candidate.expectedCTC || "",
+        location: candidate.location || "",
+        skills: Array.isArray(candidate.skills) ? candidate.skills.join(", ") : "",
+      });
+    });
+
+    // Style the header row
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD3D3D3" },
+      };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+    });
+
+    // Auto-filter for the data
+    worksheet.autoFilter = {
+      from: {
+        row: 1,
+        column: 1,
+      },
+      to: {
+        row: candidates.length + 1,
+        column: worksheet.columns.length,
+      },
+    };
+
+    // Generate the Excel file
+    const tempDir = path.join(__dirname, "../../../temp");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const filePath = path.join(tempDir, `candidates_export_${Date.now()}.xlsx`);
+    await workbook.xlsx.writeFile(filePath);
+
+    // Read the file and return as base64
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString("base64");
+
+    // Clean up the temporary file
+    fs.unlinkSync(filePath);
+
+    return {
+      done: true,
+      data: {
+        filename: `candidates_export_${new Date().toISOString().split('T')[0]}.xlsx`,
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        data: base64Data,
+      },
+    };
+  } catch (error) {
+    console.error("[CandidateService] Error in exportCandidatesExcel", {
+      error: error.message,
+    });
+    return { done: false, error: error.message };
+  }
+};
