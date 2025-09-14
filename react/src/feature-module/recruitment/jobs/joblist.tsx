@@ -372,6 +372,22 @@ const JobList = () => {
             </div>
             <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
               <div className="me-2 mb-2">
+                <div className="d-flex align-items-center border bg-white rounded p-1 me-2 icon-list">
+                  <Link
+                    to={all_routes.joblist}
+                    className="btn btn-icon btn-sm active bg-primary text-white"
+                  >
+                    <i className="ti ti-list-tree" />
+                  </Link>
+                  <Link
+                    to={all_routes.jobgrid}
+                    className="btn btn-icon btn-sm"
+                  >
+                    <i className="ti ti-layout-grid" />
+                  </Link>
+                </div>
+              </div>
+              <div className="me-2 mb-2">
                 <div className="dropdown">
                   <Link
                     to="#"
