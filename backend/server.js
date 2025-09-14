@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import socialFeedRoutes from "./routes/socialfeed.routes.js";
+import dealRoutes from "./routes/deal.routes.js";
 import companiesRoutes from "./routes/companies.routes.js";
 import contactRoutes from "./routes/contacts.routes.js";
 
@@ -60,8 +61,8 @@ const initializeServer = async () => {
 
     // Routes
     app.use("/api/socialfeed", socialFeedRoutes);
+    app.use("/api/deals", dealRoutes);
     app.use("/api/companies", companiesRoutes);
-
     app.use("/api/contacts", contactRoutes);
 
     app.get("/", (req, res) => {

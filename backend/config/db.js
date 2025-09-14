@@ -48,6 +48,7 @@ export const getTenantCollections = (tenantDbName) => {
     leaveTypes: db.collection("leaveTypes"),
     approvals: db.collection("approvals"),
     invoices: db.collection("invoices"),
+    deals: db.collection("deals"),
     activities: db.collection("activities"),
     todos: db.collection("todos"),
     schedules: db.collection("schedules"),
