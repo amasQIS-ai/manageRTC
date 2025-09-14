@@ -2,10 +2,10 @@ import superAdminController from "../controllers/superadmin/superadmin.controlle
 import adminController from "../controllers/admin/admin.controller.js";
 import invoiceSocketController from "../controllers/invoice/invoice.socket.controller.js";
 import leadController from "../controllers/lead/lead.controller.js";
+import hrDashboardController from "../controllers/hr/hr.controller.js";
 import pipelineController from "../controllers/pipeline/pipeline.controllers.js";
 import clientController from "../controllers/client/client.controllers.js";
 import activityController from "../controllers/activities/activities.controllers.js";
-import pipelineController from "../controllers/pipeline/pipeline.controllers.js";
 import { ChatController } from "../controllers/chat/chat.controller.js";
 import { ChatUsersController } from "../controllers/chat/users.controller.js";
 
