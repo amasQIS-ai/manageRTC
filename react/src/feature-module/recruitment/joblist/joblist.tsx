@@ -1,154 +1,350 @@
-import React from "react";
-import { all_routes } from "../../router/all_routes";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { all_routes } from "../../router/all_routes";
+import { useJobs } from "../../../hooks/useJobs";
+import Table from "../../../core/common/dataTable/index";
+import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
 import PredefinedDateRanges from "../../../core/common/datePicker";
 import ImageWithBasePath from "../../../core/common/imageWithBasePath";
 import { DatePicker } from "antd";
 import CommonSelect from "../../../core/common/commonSelect";
-import { joblistdetails } from "./joblistdetails";
-import Table from "../../../core/common/dataTable/index";
-import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
+import AddJob from "../jobs/add_job";
+import EditJob from "../jobs/edit_job";
+import DeleteJob from "../jobs/delete_job";
+import { message } from "antd";
+
+interface Job {
+  _id: string;
+  title: string;
+  category: string;
+  type: string;
+  description?: string;
+  requirements?: string;
+  skills?: string[];
+  tags?: string[];
+  location: {
+    country: string;
+    state: string;
+    city: string;
+  };
+  salaryRange: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  numberOfPositions: number;
+  status: 'Active' | 'Inactive';
+  appliedCount?: number;
+  companyId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const JobList = () => {
-  const data = joblistdetails;
+  const {
+    jobs,
+    stats,
+    fetchAllData,
+    fetchStats,
+    loading,
+    error,
+    exportPDF,
+    exportExcel,
+    exporting,
+  } = useJobs();
+
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+  // Filter states
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedSort, setSelectedSort] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Initialize data fetch
+  useEffect(() => {
+    console.log("JobList component mounted");
+    fetchAllData();
+    fetchStats();
+  }, [fetchAllData, fetchStats]);
+
+  // Apply filters whenever jobs or filter states change
+  useEffect(() => {
+    console.log("[JobList] Applying filters...");
+    console.log("[JobList] Current filters:", {
+      selectedStatus,
+      selectedCategory,
+      selectedType,
+      selectedSort,
+      searchQuery,
+    });
+    console.log("[JobList] Total jobs before filtering:", jobs.length);
+
+    if (!jobs || jobs.length === 0) {
+      setFilteredJobs([]);
+      return;
+    }
+
+    let result = [...jobs];
+
+    // Status filter
+    if (selectedStatus && selectedStatus !== '') {
+      console.log("[JobList] Filtering by status:", selectedStatus);
+      result = result.filter((job) => job.status === selectedStatus);
+      console.log("[JobList] After status filter:", result.length);
+    }
+
+    // Category filter
+    if (selectedCategory && selectedCategory !== '') {
+      console.log("[JobList] Filtering by category:", selectedCategory);
+      result = result.filter((job) => job.category === selectedCategory);
+      console.log("[JobList] After category filter:", result.length);
+    }
+
+    // Type filter
+    if (selectedType && selectedType !== '') {
+      console.log("[JobList] Filtering by type:", selectedType);
+      result = result.filter((job) => job.type === selectedType);
+      console.log("[JobList] After type filter:", result.length);
+    }
+
+    // Search query filter
+    if (searchQuery && searchQuery.trim() !== '') {
+      console.log("[JobList] Filtering by search query:", searchQuery);
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (job) =>
+          job.title.toLowerCase().includes(query) ||
+          job.category.toLowerCase().includes(query) ||
+          job.type.toLowerCase().includes(query) ||
+          (job.description && job.description.toLowerCase().includes(query)) ||
+          (job.skills && job.skills.some(skill => skill.toLowerCase().includes(query))) ||
+          (job.location && job.location.city.toLowerCase().includes(query)) ||
+          (job.location && job.location.state.toLowerCase().includes(query)) ||
+          (job.location && job.location.country.toLowerCase().includes(query))
+      );
+      console.log("[JobList] After search filter:", result.length);
+    }
+
+    // Sort
+    if (selectedSort) {
+      result.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        switch (selectedSort) {
+          case 'asc':
+            return a.title.localeCompare(b.title);
+          case 'desc':
+            return b.title.localeCompare(a.title);
+          case 'recent':
+            return dateB.getTime() - dateA.getTime();
+          case 'oldest':
+            return dateA.getTime() - dateB.getTime();
+          case 'salary':
+            return (b.salaryRange?.min || 0) - (a.salaryRange?.min || 0);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    console.log("[JobList] Final filtered jobs count:", result.length);
+    setFilteredJobs(result);
+  }, [jobs, selectedStatus, selectedCategory, selectedType, selectedSort, searchQuery]);
+
+  // Handle filter changes
+  const handleStatusChange = (status: string) => {
+    console.log("[JobList] Status filter changed to:", status);
+    setSelectedStatus(status);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    console.log("[JobList] Category filter changed to:", category);
+    setSelectedCategory(category);
+  };
+
+  const handleTypeChange = (type: string) => {
+    console.log("[JobList] Type filter changed to:", type);
+    setSelectedType(type);
+  };
+
+  const handleSortChange = (sort: string) => {
+    console.log("[JobList] Sort filter changed to:", sort);
+    setSelectedSort(sort);
+  };
+
+  const handleSearchChange = (query: string) => {
+    console.log("[JobList] Search query changed to:", query);
+    setSearchQuery(query);
+  };
+
+  const handleClearFilters = () => {
+    console.log("[JobList] Clearing all filters");
+    setSelectedStatus('');
+    setSelectedCategory('');
+    setSelectedType('');
+    setSelectedSort('');
+    setSearchQuery('');
+  };
+
+  // Handle edit job
+  const handleEditJob = (job: Job) => {
+    setSelectedJob(job);
+    // Dispatch custom event that edit_job.tsx is listening for
+    window.dispatchEvent(
+      new CustomEvent('edit-job', { detail: { job } })
+    );
+  };
+
+  // Handle delete job
+  const handleDeleteJob = (job: Job) => {
+    setSelectedJob(job);
+    // Dispatch custom event that delete_job.tsx is listening for
+    window.dispatchEvent(
+      new CustomEvent('delete-job', { detail: { job } })
+    );
+  };
+
+  // Export functions
+  const handleExportPDF = useCallback(() => {
+    exportPDF();
+  }, [exportPDF]);
+
+  const handleExportExcel = useCallback(() => {
+    exportExcel();
+  }, [exportExcel]);
+
+  // Table columns
   const columns = [
     {
       title: "Job ID",
-      dataIndex: "Job_ID",
-      sorter: (a: any, b: any) => a.Job_ID.length - b.Job_ID.length,
+      dataIndex: "_id",
+      render: (text: string, record: Job) => (
+        <Link to={all_routes.jobdetails} className="link-default">
+          {record._id.slice(-8).toUpperCase()}
+        </Link>
+      ),
+      sorter: (a: Job, b: Job) => a._id.localeCompare(b._id),
     },
     {
       title: "Job Title",
-      dataIndex: "Job_Title",
-      render: (text: string, record: any) => (
-        <div className="d-flex align-items-center file-name-icon">
-          <Link to="#" className="avatar avatar-md bg-light rounded">
-            <ImageWithBasePath
-              src={`assets/img/icons/${record.Image}`}
-              className="img-fluid rounded-circle"
-              alt="img"
-            />
-          </Link>
+      dataIndex: "title",
+      render: (text: string, record: Job) => (
+        <div className="d-flex align-items-center">
           <div className="ms-2">
             <h6 className="fw-medium">
-              <Link to="#">{record.Job_Title}</Link>
+              <Link to={all_routes.jobdetails}>{record.title}</Link>
             </h6>
-            <span className="d-block mt-1">{record.Roll}</span>
+            <span className="fs-12 fw-normal text-gray">{record.category}</span>
           </div>
         </div>
       ),
-      sorter: (a: any, b: any) => a.Job_Title.length - b.Job_Title.length,
+      sorter: (a: Job, b: Job) => a.title.localeCompare(b.title),
     },
     {
-      title: "Category",
-      dataIndex: "Category",
-      sorter: (a: any, b: any) => a.Category.length - b.Category.length,
+      title: "Type",
+      dataIndex: "type",
+      render: (text: string) => (
+        <span className="badge badge-soft-info">{text}</span>
+      ),
+      sorter: (a: Job, b: Job) => a.type.localeCompare(b.type),
+    },
+    {
+      title: "Applications",
+      dataIndex: "appliedCount",
+      render: (text: number) => <span>{text || 0} Applicants</span>,
+      sorter: (a: Job, b: Job) => (a.appliedCount || 0) - (b.appliedCount || 0),
     },
     {
       title: "Location",
-      dataIndex: "Location",
-      sorter: (a: any, b: any) => a.Location.length - b.Location.length,
+      dataIndex: "location",
+      render: (location: { city: string; state: string; country: string }) => (
+        <span>
+          {location.city}, {location.state}, {location.country}
+        </span>
+      ),
+      sorter: (a: Job, b: Job) => a.location.city.localeCompare(b.location.city),
     },
     {
       title: "Salary Range",
-      dataIndex: "Salary_Range",
-      sorter: (a: any, b: any) => a.Salary_Range.length - b.Salary_Range.length,
+      dataIndex: "salaryRange",
+      render: (salaryRange: { min: number; max: number; currency: string }) => (
+        <span>
+          {salaryRange.min.toLocaleString()} - {salaryRange.max.toLocaleString()} {salaryRange.currency} / month
+        </span>
+      ),
+      sorter: (a: Job, b: Job) => (a.salaryRange?.min || 0) - (b.salaryRange?.min || 0),
     },
     {
       title: "Posted Date",
-      dataIndex: "Posted_Date",
-      sorter: (a: any, b: any) => a.Posted_Date.length - b.Posted_Date.length,
+      dataIndex: "createdAt",
+      render: (text: string) => new Date(text).toLocaleDateString(),
+      sorter: (a: Job, b: Job) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (text: string) => (
+        <span
+          className={`badge ${
+            text === "Active" ? "badge-soft-success" : "badge-soft-warning"
+          }`}
+        >
+          {text}
+        </span>
+      ),
+      sorter: (a: Job, b: Job) => a.status.localeCompare(b.status),
     },
     {
       title: "",
       dataIndex: "actions",
-      render: () => (
-        <div className="action-icon d-inline-flex">
-          <Link
-            to="#"
-            className="me-2"
-            data-bs-toggle="modal"
-            data-bs-target="#edit_post"
-          >
-            <i className="ti ti-edit" />
-          </Link>
-          <Link to="#" data-bs-toggle="modal" data-bs-target="#delete_modal">
-            <i className="ti ti-trash" />
-          </Link>
+      render: (text: any, record: Job) => (
+        <div className="d-flex align-items-center">
+          <div className="dropdown">
+            <Link
+              to="#"
+              className="btn btn-white btn-icon btn-sm d-flex align-items-center justify-content-center"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i className="ti ti-dots-vertical fs-14"></i>
+            </Link>
+            <ul className="dropdown-menu dropdown-menu-right p-3">
+              <li>
+                <Link
+                  className="dropdown-item rounded-1"
+                  to="#"
+                  data-bs-toggle="modal"
+                  data-bs-target="#edit_job"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleEditJob(record);
+                  }}
+                >
+                  <i className="ti ti-edit me-2"></i>Edit
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="dropdown-item rounded-1"
+                  to="#"
+                  data-bs-toggle="modal"
+                  data-bs-target="#delete_job"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteJob(record);
+                  }}
+                >
+                  <i className="ti ti-trash me-2"></i>Delete
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
       ),
     },
-  ];
-
-  const getModalContainer = () => {
-    const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
-  };
-
-  const jobCategory = [
-    { value: "Select", label: "Select" },
-    { value: "IOS", label: "IOS" },
-    { value: "Web & Application", label: "Web & Application" },
-    { value: "Networking", label: "Networking" },
-  ];
-  const jobtype = [
-    { value: "Select", label: "Select" },
-    { value: "Full Time", label: "Full Time" },
-    { value: "Part Time", label: "Part Time" },
-  ];
-  const joblevel = [
-    { value: "Select", label: "Select" },
-    { value: "Team Lead", label: "Team Lead" },
-    { value: "Manager", label: "Manager" },
-    { value: "Senior", label: "Senior" },
-  ];
-  const experience = [
-    { value: "Select", label: "Select" },
-    { value: "Entry Level", label: "Entry Level" },
-    { value: "Mid Level", label: "Mid Level" },
-    { value: "Expert", label: "Expert" },
-  ];
-  const qualification = [
-    { value: "Select", label: "Select" },
-    { value: "Bachelore Degree", label: "Bachelore Degree" },
-    { value: "Master Degree", label: "Master Degree" },
-    { value: "Others", label: "Others" },
-  ];
-  const genderChoose = [
-    { value: "Select", label: "Select" },
-    { value: "Male", label: "Male" },
-    { value: "Female", label: "Female" },
-  ];
-  const sallary = [
-    { value: "Select", label: "Select" },
-    { value: "10k - 15k", label: "10k - 15k" },
-    { value: "15k -20k", label: "15k -20k" },
-  ];
-  const maxsallary = [
-    { value: "Select", label: "Select" },
-    { value: "40k - 50k", label: "40k - 50k" },
-    { value: "50k - 60k", label: "50k - 60k" },
-  ];
-  const country = [
-    { value: "Select", label: "Select" },
-    { value: "USA", label: "USA" },
-    { value: "Canada", label: "Canada" },
-    { value: "Germany", label: "Germany" },
-    { value: "France", label: "France" },
-  ];
-  const state = [
-    { value: "Select", label: "Select" },
-    { value: "California", label: "California" },
-    { value: "New York", label: "New York" },
-    { value: "Texas", label: "Texas" },
-    { value: "Florida", label: "Florida" },
-  ];
-  const city = [
-    { value: "Select", label: "Select" },
-    { value: "Los Angeles", label: "Los Angeles" },
-    { value: "San Diego", label: "San Diego" },
-    { value: "Fresno", label: "Fresno" },
-    { value: "San Francisco", label: "San Francisco" },
   ];
 
   return (
@@ -164,30 +360,17 @@ const JobList = () => {
                 <ol className="breadcrumb mb-0">
                   <li className="breadcrumb-item">
                     <Link to={all_routes.adminDashboard}>
-                      <i className="ti ti-smart-home" />
+                      <i className="ti ti-smart-home"></i>
                     </Link>
                   </li>
-                  <li className="breadcrumb-item">Administration</li>
+                  <li className="breadcrumb-item">Employee</li>
                   <li className="breadcrumb-item active" aria-current="page">
-                    Jobs
+                    Job List
                   </li>
                 </ol>
               </nav>
             </div>
-            <div className="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-              <div className="me-2 mb-2">
-                <div className="d-flex align-items-center border bg-white rounded p-1 me-2 icon-list">
-                  <Link
-                    to={all_routes.joblist}
-                    className="btn btn-icon btn-sm active bg-primary text-white me-1"
-                  >
-                    <i className="ti ti-list-tree" />
-                  </Link>
-                  <Link to={all_routes.jobgrid} className="btn btn-icon btn-sm">
-                    <i className="ti ti-layout-grid" />
-                  </Link>
-                </div>
-              </div>
+            <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
               <div className="me-2 mb-2">
                 <div className="dropdown">
                   <Link
@@ -195,20 +378,31 @@ const JobList = () => {
                     className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
                     data-bs-toggle="dropdown"
                   >
-                    <i className="ti ti-file-export me-1" />
                     Export
                   </Link>
                   <ul className="dropdown-menu  dropdown-menu-end p-3">
                     <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        <i className="ti ti-file-type-pdf me-1" />
-                        Export as PDF
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleExportPDF();
+                        }}
+                      >
+                        {exporting ? "Exporting..." : "Export as PDF"}
                       </Link>
                     </li>
                     <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        <i className="ti ti-file-type-xls me-1" />
-                        Export as Excel{" "}
+                      <Link
+                        to="#"
+                        className="dropdown-item rounded-1"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleExportExcel();
+                        }}
+                      >
+                        {exporting ? "Exporting..." : "Export as Excel"}
                       </Link>
                     </li>
                   </ul>
@@ -218,895 +412,249 @@ const JobList = () => {
                 <Link
                   to="#"
                   data-bs-toggle="modal"
-                  data-bs-target="#add_post"
+                  data-bs-target="#add_job"
                   className="btn btn-primary d-flex align-items-center"
                 >
-                  <i className="ti ti-circle-plus me-2" />
-                  Post job
+                  <i className="ti ti-circle-plus me-2"></i>
+                  Add Job
                 </Link>
-              </div>
-              <div className="head-icons ms-2">
-                <CollapseHeader />
               </div>
             </div>
           </div>
           {/* /Breadcrumb */}
-          <div className="card">
-            <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-              <h5>Job List</h5>
-              <div className="d-flex my-xl-auto right-content align-items-center flex-wrap row-gap-3">
-                <div className="me-3">
-                  <div className="input-icon-end position-relative">
-                    <PredefinedDateRanges />
-                    <span className="input-icon-addon">
-                      <i className="ti ti-chevron-down" />
+
+          {/* Jobs Stats */}
+          <div className="row">
+            <div className="col-xl-3 col-sm-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="flex-grow-1">
+                      <p className="text-gray fs-14 fw-medium mb-1">Total Jobs</p>
+                      <h4 className="fw-bold">{stats?.totalJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-md bg-primary flex-shrink-0">
+                      <i className="ti ti-briefcase fs-16"></i>
                     </span>
                   </div>
                 </div>
-                <div className="dropdown me-3">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                    data-bs-toggle="dropdown"
-                  >
-                    Role
-                  </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-3">
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Senior IOS Developer
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Junior PHP Developer
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Network Engineer
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-                <div className="dropdown me-3">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                    data-bs-toggle="dropdown"
-                  >
-                    Select Status
-                  </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-3">
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Accepted
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        sent
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Expired
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Declined
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-                <div className="dropdown">
-                  <Link
-                    to="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
-                    data-bs-toggle="dropdown"
-                  >
-                    Sort By : Last 7 Days
-                  </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-3">
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Recently Added
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Ascending
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Desending
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Last Month
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="#" className="dropdown-item rounded-1">
-                        Last 7 Days
-                      </Link>
-                    </li>
-                  </ul>
+              </div>
+            </div>
+            <div className="col-xl-3 col-sm-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="flex-grow-1">
+                      <p className="text-gray fs-14 fw-medium mb-1">Active Jobs</p>
+                      <h4 className="fw-bold">{stats?.activeJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-md bg-success flex-shrink-0">
+                      <i className="ti ti-circle-check fs-16"></i>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="card-body p-0">
-              <Table dataSource={data} columns={columns} Selection={true} />
+            <div className="col-xl-3 col-sm-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="flex-grow-1">
+                      <p className="text-gray fs-14 fw-medium mb-1">Inactive Jobs</p>
+                      <h4 className="fw-bold">{stats?.inactiveJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-md bg-warning flex-shrink-0">
+                      <i className="ti ti-circle-x fs-16"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-3 col-sm-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="flex-grow-1">
+                      <p className="text-gray fs-14 fw-medium mb-1">New Jobs</p>
+                      <h4 className="fw-bold">{stats?.newJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-md bg-info flex-shrink-0">
+                      <i className="ti ti-plus fs-16"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
+          {/* /Jobs Stats */}
+
+          {/* Jobs List */}
+          <div className="card">
+            <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+              <h5>Job List</h5>
+            </div>
+            <div className="card-body p-0">
+              <div className="custom-datatable-filter">
+                <div className="row">
+                  <div className="col-md-3">
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Search Jobs..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="form-group">
+                      <select
+                        className="form-select"
+                        value={selectedStatus}
+                        onChange={(e) => handleStatusChange(e.target.value)}
+                      >
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="form-group">
+                      <select
+                        className="form-select"
+                        value={selectedCategory}
+                        onChange={(e) => handleCategoryChange(e.target.value)}
+                      >
+                        <option value="">All Categories</option>
+                        <option value="Software">Software</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Networking">Networking</option>
+                        <option value="Design">Design</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Sales">Sales</option>
+                        <option value="HR">HR</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="form-group">
+                      <select
+                        className="form-select"
+                        value={selectedType}
+                        onChange={(e) => handleTypeChange(e.target.value)}
+                      >
+                        <option value="">All Types</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Freelance">Freelance</option>
+                        <option value="Internship">Internship</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="form-group">
+                      <select
+                        className="form-select"
+                        value={selectedSort}
+                        onChange={(e) => handleSortChange(e.target.value)}
+                      >
+                        <option value="">Sort By</option>
+                        <option value="recent">Recently Added</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="asc">Title A-Z</option>
+                        <option value="desc">Title Z-A</option>
+                        <option value="salary">Salary High-Low</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-1">
+                    {(selectedStatus || selectedCategory || selectedType || selectedSort || searchQuery) && (
+                      <button
+                        className="btn btn-light"
+                        onClick={handleClearFilters}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="sr-only">Loading jobs...</span>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="text-center py-4">
+                  <div className="alert alert-danger">
+                    <h6>Error loading jobs</h6>
+                    <p>{error}</p>
+                    <button 
+                      className="btn btn-primary btn-sm"
+                      onClick={() => fetchAllData()}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Filter Summary */}
+                  <div className="px-3 pt-3">
+                    <p className="text-muted">
+                      Showing {filteredJobs.length} of {jobs.length} jobs
+                      {(selectedStatus || selectedCategory || selectedType || selectedSort || searchQuery) && (
+                        <span className="ms-2 text-info">
+                          (Filters applied:
+                          {selectedStatus && ` Status: ${selectedStatus}`}
+                          {selectedCategory && ` Category: ${selectedCategory}`}
+                          {selectedType && ` Type: ${selectedType}`}
+                          {selectedSort && ` Sort: ${selectedSort}`}
+                          {searchQuery && ` Search: "${searchQuery}"`}
+                          )
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  <Table
+                    dataSource={filteredJobs}
+                    columns={columns}
+                    Selection={true}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+          {/* /Jobs List */}
         </div>
       </div>
       {/* /Page Wrapper */}
-      {/* Add Post */}
-      <div className="modal fade" id="add_post">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Post Job</h4>
-              <button
-                type="button"
-                className="btn-close custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-            <form>
-              <div className="modal-body pb-0">
-                <div className="row">
-                  <div className="contact-grids-tab pt-0">
-                    <ul className="nav nav-underline" id="myTab" role="tablist">
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className="nav-link active"
-                          id="info-tab"
-                          data-bs-toggle="tab"
-                          data-bs-target="#basic-info"
-                          type="button"
-                          role="tab"
-                          aria-selected="true"
-                        >
-                          Basic Information
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className="nav-link"
-                          id="address-tab"
-                          data-bs-toggle="tab"
-                          data-bs-target="#address"
-                          type="button"
-                          role="tab"
-                          aria-selected="false"
-                        >
-                          Location
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="tab-content" id="myTabContent">
-                    <div
-                      className="tab-pane fade show active"
-                      id="basic-info"
-                      role="tabpanel"
-                      aria-labelledby="info-tab"
-                      tabIndex={0}
-                    >
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                            <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-30.jpg"
-                                alt="img"
-                                className="rounded-circle"
-                              />
-                            </div>
-                            <div className="profile-upload">
-                              <div className="mb-2">
-                                <h6 className="mb-1">Upload Profile Image</h6>
-                                <p className="fs-12">
-                                  Image should be below 4 mb
-                                </p>
-                              </div>
-                              <div className="profile-uploader d-flex align-items-center">
-                                <div className="drag-upload-btn btn btn-sm btn-primary me-2">
-                                  Upload
-                                  <input
-                                    type="file"
-                                    className="form-control image-sign"
-                                    multiple
-                                  />
-                                </div>
-                                <Link to="#" className="btn btn-light btn-sm">
-                                  Cancel
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Title <span className="text-danger"> *</span>
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Description{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <textarea
-                              rows={3}
-                              className="form-control"
-                              defaultValue={""}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Category{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={jobCategory}
-                              defaultValue={jobCategory[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Type <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={jobtype}
-                              defaultValue={jobtype[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Level <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={joblevel}
-                              defaultValue={joblevel[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Experience <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={experience}
-                              defaultValue={experience[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Qualification{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={qualification}
-                              defaultValue={qualification[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Gender <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={genderChoose}
-                              defaultValue={genderChoose[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Min. Sallary{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={sallary}
-                              defaultValue={sallary[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Max. Sallary{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={maxsallary}
-                              defaultValue={maxsallary[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3 ">
-                            <label className="form-label">
-                              Job Expired Date{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <div className="input-icon-end position-relative">
-                              <DatePicker
-                                className="form-control datetimepicker"
-                                format={{
-                                  format: "DD-MM-YYYY",
-                                  type: "mask",
-                                }}
-                                getPopupContainer={getModalContainer}
-                                placeholder="DD-MM-YYYY"
-                              />
-                              <span className="input-icon-addon">
-                                <i className="ti ti-calendar text-gray-7" />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Required Skills
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          data-bs-dismiss="modal"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#success_modal"
-                        >
-                          Save &amp; Next
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      className="tab-pane fade"
-                      id="address"
-                      role="tabpanel"
-                      aria-labelledby="address-tab"
-                      tabIndex={0}
-                    >
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Address <span className="text-danger"> *</span>
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Country <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={country}
-                              defaultValue={country[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              State <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={state}
-                              defaultValue={state[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              City <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={city}
-                              defaultValue={city[0]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Zip Code <span className="text-danger"> *</span>
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="map-grid mb-3">
-                            <iframe
-                              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6509170.989457427!2d-123.80081967108484!3d37.192957227641294!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fb9fe5f285e3d%3A0x8b5109a227086f55!2sCalifornia%2C%20USA!5e0!3m2!1sen!2sin!4v1669181581381!5m2!1sen!2sin"
-                              style={{ border: 0 }}
-                              allowFullScreen
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              className="w-100"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          data-bs-dismiss="modal"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#success_modal"
-                        >
-                          Post
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+
+      {/* Footer */}
+      <div className="footer d-sm-flex align-items-center justify-content-between">
+        <p>2014 - 2025 © Amasqis.</p>
+        <p>
+          Designed &amp; Developed By{" "}
+          <Link to="#" className="text-primary">
+            Amasqis
+          </Link>
+        </p>
       </div>
-      {/* /Post Job */}
-      {/* Add Job Success */}
-      <div className="modal fade" id="success_modal" role="dialog">
-        <div className="modal-dialog modal-dialog-centered modal-xm">
-          <div className="modal-content">
-            <div className="modal-body">
-              <div className="text-center p-3">
-                <span className="avatar avatar-lg avatar-rounded bg-success mb-3">
-                  <i className="ti ti-check fs-24" />
-                </span>
-                <h5 className="mb-2">Job Posted Successfully</h5>
-                <div>
-                  <div className="row g-2">
-                    <div className="col-12">
-                      <Link
-                        to={all_routes.jobgrid}
-                        data-bs-dismiss="modal"
-                        className="btn btn-dark w-100"
-                      >
-                        Back to List
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Add Client Success */}
-      {/* Edit Post */}
-      <div className="modal fade" id="edit_post">
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h4 className="modal-title">Edit Job</h4>
-              <button
-                type="button"
-                className="btn-close custom-btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-            <form>
-              <div className="modal-body pb-0">
-                <div className="row">
-                  <div className="contact-grids-tab pt-0">
-                    <ul
-                      className="nav nav-underline"
-                      id="myTabs"
-                      role="tablist"
-                    >
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className="nav-link active"
-                          id="info-tab"
-                          data-bs-toggle="tab"
-                          data-bs-target="#basic-infos"
-                          type="button"
-                          role="tab"
-                          aria-selected="true"
-                        >
-                          Basic Information
-                        </button>
-                      </li>
-                      <li className="nav-item" role="presentation">
-                        <button
-                          className="nav-link"
-                          id="address-tabs"
-                          data-bs-toggle="tab"
-                          data-bs-target="#addresss"
-                          type="button"
-                          role="tab"
-                          aria-selected="false"
-                        >
-                          Location
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="tab-content" id="myTabContents">
-                    <div
-                      className="tab-pane fade show active"
-                      id="basic-infos"
-                      role="tabpanel"
-                      aria-labelledby="info-tab"
-                      tabIndex={0}
-                    >
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="d-flex align-items-center flex-wrap row-gap-3 bg-light w-100 rounded p-3 mb-4">
-                            <div className="d-flex align-items-center justify-content-center avatar avatar-xxl rounded-circle border border-dashed me-2 flex-shrink-0 text-dark frames">
-                              <ImageWithBasePath
-                                src="assets/img/profiles/avatar-30.jpg"
-                                alt="img"
-                                className="rounded-circle"
-                              />
-                            </div>
-                            <div className="profile-upload">
-                              <div className="mb-2">
-                                <h6 className="mb-1">Upload Profile Image</h6>
-                                <p className="fs-12">
-                                  Image should be below 4 mb
-                                </p>
-                              </div>
-                              <div className="profile-uploader d-flex align-items-center">
-                                <div className="drag-upload-btn btn btn-sm btn-primary me-2">
-                                  Upload
-                                  <input
-                                    type="file"
-                                    className="form-control image-sign"
-                                    multiple
-                                  />
-                                </div>
-                                <Link to="#" className="btn btn-light btn-sm">
-                                  Cancel
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Title <span className="text-danger"> *</span>
-                            </label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              defaultValue="Senior IOS Developer"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Description{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <textarea
-                              rows={3}
-                              className="form-control"
-                              defaultValue={""}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Category{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={jobCategory}
-                              defaultValue={jobCategory[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Type <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={jobtype}
-                              defaultValue={jobtype[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Job Level <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={joblevel}
-                              defaultValue={joblevel[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Experience <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={experience}
-                              defaultValue={experience[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Qualification{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={qualification}
-                              defaultValue={qualification[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Gender <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={genderChoose}
-                              defaultValue={genderChoose[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Min. Sallary{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={sallary}
-                              defaultValue={sallary[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Max. Sallary{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={maxsallary}
-                              defaultValue={maxsallary[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3 ">
-                            <label className="form-label">
-                              Job Expired Date{" "}
-                              <span className="text-danger"> *</span>
-                            </label>
-                            <div className="input-icon-end position-relative">
-                              <DatePicker
-                                className="form-control datetimepicker"
-                                format={{
-                                  format: "DD-MM-YYYY",
-                                  type: "mask",
-                                }}
-                                getPopupContainer={getModalContainer}
-                                placeholder="DD-MM-YYYY"
-                              />
-                              <span className="input-icon-addon">
-                                <i className="ti ti-calendar text-gray-7" />
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Required Skills
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          data-bs-dismiss="modal"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#success_modal"
-                        >
-                          Save &amp; Next
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      className="tab-pane fade"
-                      id="addresss"
-                      role="tabpanel"
-                      aria-labelledby="address-tab"
-                      tabIndex={0}
-                    >
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Address <span className="text-danger"> *</span>
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Country <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={country}
-                              defaultValue={country[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              State <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={state}
-                              defaultValue={state[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              City <span className="text-danger"> *</span>
-                            </label>
-                            <CommonSelect
-                              className="select"
-                              options={city}
-                              defaultValue={city[1]}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="mb-3">
-                            <label className="form-label">
-                              Zip Code <span className="text-danger"> *</span>
-                            </label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="map-grid mb-3">
-                            <iframe
-                              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6509170.989457427!2d-123.80081967108484!3d37.192957227641294!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fb9fe5f285e3d%3A0x8b5109a227086f55!2sCalifornia%2C%20USA!5e0!3m2!1sen!2sin!4v1669181581381!5m2!1sen!2sin"
-                              style={{ border: 0 }}
-                              allowFullScreen
-                              loading="lazy"
-                              referrerPolicy="no-referrer-when-downgrade"
-                              className="w-100"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <button
-                          type="button"
-                          className="btn btn-light me-2"
-                          data-bs-dismiss="modal"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#success_modal"
-                        >
-                          Post
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {/* /Post Job */}
+      {/* /Footer */}
+
+      {/* Modal Components */}
+      <AddJob />
+      <EditJob />
+      <DeleteJob />
     </>
   );
 };
