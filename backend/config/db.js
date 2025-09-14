@@ -50,7 +50,7 @@ export const getTenantCollections = (tenantDbName) => {
     todos: db.collection("todos"),
     schedules: db.collection("schedules"),
     birthdays: db.collection("birthdays"),
-    jobApplications: db.collection("jobApplications"),
+    jobs: db.collection("jobApplications"),
     earnings: db.collection("earnings"),
 
     

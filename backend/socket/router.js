@@ -11,6 +11,7 @@ import { ChatUsersController } from "../controllers/chat/users.controller.js";
 import userSocketController from "../controllers/user/user.socket.controller.js";
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import candidateController from "../controllers/candidates/candidates.controllers.js";
+import jobController from "../controllers/jobs/jobs.controllers.js";
 
 import employeeController from "../controllers/employee/employee.controller.js";
 
@@ -58,9 +59,12 @@ const router = (socket, io, role) => {
       // Pipelines JS
       pipelineController(socket, io);
       console.log("Attaching pipeline controller for admin...");
-      pipelineController(socket, io);
-      candidateController(socket, io);
+      
       console.log("Attaching candidate controller for admin...");
+      candidateController(socket, io);
+
+      console.log("Attaching job controller for admin...");
+      jobController(socket, io);
       break;
 
     case "hr":
@@ -76,6 +80,11 @@ const router = (socket, io, role) => {
       console.log("Attaching social feed controller for hr...");
       socialFeedSocketController(socket, io);
       console.log("Attaching pipeline controller for hr...");
+      pipelineController(socket, io);
+      console.log("Attaching candidate controller for hr...");
+      candidateController(socket, io);
+      console.log("Attaching job controller for hr...");
+      jobController(socket, io);
       break;
     case "leads":
       console.log("Attaching leads controller...");
