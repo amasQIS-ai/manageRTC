@@ -1,202 +1,509 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { Link } from 'react-router-dom';
 import Table from "../../core/common/dataTable/index";
-import { resignation_table } from "../../core/data/json/resignation_table";
-import { all_routes } from "../router/all_routes";
-import ImageWithBasePath from "../../core/common/imageWithBasePath";
-import CommonSelect from "../../core/common/commonSelect";
+import { all_routes } from '../router/all_routes';
+import ImageWithBasePath from '../../core/common/imageWithBasePath';
+import CommonSelect from '../../core/common/commonSelect';
 import { DatePicker } from "antd";
-import { termination } from "../../core/common/selectoption/selectoption";
-import CollapseHeader from "../../core/common/collapse-header/collapse-header";
+import CollapseHeader from '../../core/common/collapse-header/collapse-header';
+import { useSocket } from "../../SocketContext";
+import { Socket } from "socket.io-client";
+import { format, parse } from "date-fns";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Modal } from "antd";
+import dayjs from "dayjs";
+
+type ResignationRow = {
+  employeeName: string;
+  department: string;
+  reason: string;
+  noticeDate: string;
+  resignationDate: string; // already formatted by backend like "12 Sep 2025"
+  resignationId: string;
+};
+
+type Stats = {
+  totalResignations: string;
+  recentResignations: string;
+};
 
 const Resignation = () => {
+    const socket = useSocket() as Socket | null;
+
+  const [rows, setRows] = useState<ResignationRow[]>([]);
+  const [stats, setStats] = useState<Stats>({ totalResignations: "0", recentResignations: "0" });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [filterType, setFilterType] = useState<string>("last7days");
+  const [customRange, setCustomRange] = useState<{ startDate?: string; endDate?: string }>({});
+  const [editing, setEditing] = useState<any>(null);
+  
+
+    // Controlled edit form data
+    const [editForm, setEditForm] = useState({
+      employeeName: "",
+      department: "",
+      noticeDate: "",        // "DD-MM-YYYY" shown in modal
+      reason: "",
+      resignationDate: "",   // "DD-MM-YYYY" shown in modal
+      resignationId: "",
+    });
+
+    const ddmmyyyyToYMD = (s?: string) => {
+      if (!s) return "";
+      const d = parse(s, "dd-MM-yyyy", new Date());
+      return isNaN(d.getTime()) ? "" : format(d, "yyyy-MM-dd");
+    };
+
+     const openEditModal = (row: any) => {
+      setEditForm({
+        employeeName: row.employeeName || "",
+        department: row.department || "",
+        noticeDate: row.noticeDate
+          ? format(parse(row.noticeDate, "yyyy-MM-dd", new Date()), "dd-MM-yyyy")
+          : "",
+        reason: row.reason || "",
+        resignationDate: row.resignationDate
+          ? format(parse(row.resignationDate, "yyyy-MM-dd", new Date()), "dd-MM-yyyy")
+          : "",
+        resignationId: row.resignationId,
+      });
+    };
+
   const getModalContainer = () => {
     const modalElement = document.getElementById("modal-datepicker");
-    return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
+    return modalElement ? modalElement : document.body;
   };
 
-  const data = resignation_table;
-  const columns = [
+    const parseYMD = (s?: string) => (s ? parse(s, "yyyy-MM-dd", new Date()) : null); // string -> Date
+    const toYMD = (d: any) => {
+      if (!d) return "";
+      const dt = "toDate" in d ? d.toDate() : d; // support dayjs or Date
+      return format(dt, "yyyy-MM-dd");
+    };
+    
+  // state near top of component
+    const [addForm, setAddForm] = useState({
+      employeeName: "",
+      department: "",
+      reason: "",
+      noticeDate: "",                    // YYYY-MM-DD from DatePicker
+      resignationDate:"",
+    });
+
+    const confirmDelete = (onConfirm: () => void) => {
+      Modal.confirm({
+        title: null,
+        icon: null,
+        closable: true,
+        centered: true,
+        okText: "Yes, Delete",
+        cancelText: "Cancel",
+        okButtonProps: { style: { background: "#ff4d4f", borderColor: "#ff4d4f" } },
+        cancelButtonProps: { style: { background: "#f5f5f5" } },
+        content: (
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                margin: "0 auto 12px",
+                borderRadius: 12,
+                background: "#ffecec",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <a aria-label="Delete">
+                <DeleteOutlined style={{ fontSize: 18, color: "#ff4d4f" }} />
+              </a>
+            </div>
+            <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>
+              Confirm Delete
+            </div>
+            <div style={{ color: "#6b7280" }}>
+              You want to delete all the marked items, this can’t be undone once you delete.
+            </div>
+          </div>
+        ),
+        onOk: async () => {
+          await onConfirm();
+        },
+      });
+    };
+    
+    const fmtYMD = (s?: string) => {
+      if (!s) return "";
+      const d = parse(s, "yyyy-MM-dd", new Date());
+      return isNaN(d.getTime()) ? s : format(d, "dd MMM yyyy");
+    };
+
+  // event handlers
+  const onListResponse = useCallback((res: any) => {
+    if (res?.done) {
+      setRows(res.data || []);
+    } else {
+      setRows([]);
+      // optionally toast error
+      // toast.error(res?.message || "Failed to fetch resignations");
+    }
+    setLoading(false);
+  }, []);
+
+  const onStatsResponse = useCallback((res: any) => {
+    if (res?.done && res.data) {
+      setStats(res.data);
+    }
+  }, []);
+
+  const onAddResponse = useCallback((res: any) => {
+    // feedback only; list and stats will be broadcast from controller
+    if (!res?.done) {
+      // toast.error(res?.message || "Failed to add resignation");
+    }
+  }, []);
+
+  const onUpdateResponse = useCallback((res: any) => {
+    if (!res?.done) {
+      // toast.error(res?.message || "Failed to update resignation");
+    }
+  }, []);
+
+  const onDeleteResponse = useCallback((res: any) => {
+    if (res?.done) {
+      setSelectedKeys([]);
+    } else {
+      // toast.error(res?.message || "Failed to delete");
+    }
+  }, []);
+
+  
+  // register socket listeners and join room
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("join-room", "hr_room");
+
+    socket.on("hr/resignation/resignationlist-response", onListResponse);
+    socket.on("hr/resignation/resignation-details-response", onStatsResponse);
+    socket.on("hr/resignation/add-resignation-response", onAddResponse);
+    socket.on("hr/resignation/update-resignation-response", onUpdateResponse);
+    socket.on("hr/resignation/delete-resignation-response", onDeleteResponse);
+
+    return () => {
+      socket.off("hr/resignation/resignationlist-response", onListResponse);
+      socket.off("hr/resignation/resignation-details-response", onStatsResponse);
+      socket.off("hr/resignation/add-resignation-response", onAddResponse);
+      socket.off("hr/resignation/update-resignation-response", onUpdateResponse);
+      socket.off("hr/resignation/delete-resignation-response", onDeleteResponse);
+    };
+  }, [socket, onListResponse, onStatsResponse, onAddResponse, onUpdateResponse, onDeleteResponse]);
+
+  // fetchers
+  const fetchList = useCallback(
+    (type: string, range?: { startDate?: string; endDate?: string }) => {
+      if (!socket) return;
+      setLoading(true);
+      const payload: any = { type };
+      if (type === "custom" && range?.startDate && range?.endDate) {
+        payload.startDate = range.startDate;
+        payload.endDate = range.endDate;
+      }
+      socket.emit("hr/resignation/resignationlist", payload);
+    },
+    [socket]
+  );
+
+  const toIsoFromDDMMYYYY = (s: string) => {
+  // s like "13-09-2025"
+    const [dd, mm, yyyy] = s.split("-").map(Number);
+    if (!dd || !mm || !yyyy) return null;
+  // Construct UTC date to avoid TZ shifts
+    const d = new Date(Date.UTC(yyyy, mm - 1, dd, 0, 0, 0));
+    return isNaN(d.getTime()) ? null : d.toISOString();
+    };
+    
+  const handleAddSave = () => {
+      if (!socket) return;
+
+      // basic validation
+      if (!addForm.employeeName || !addForm.noticeDate || !addForm.reason || !addForm.resignationDate || !addForm.department) {
+        // toast.warn("Please fill required fields");
+        return;
+    }
+    
+    const noticeIso = toIsoFromDDMMYYYY(addForm.noticeDate);
+    if (!noticeIso) {
+    // toast.error("Invalid notice date");
+        return;
+    }
+    const resIso= toIsoFromDDMMYYYY(addForm.resignationDate);
+    if (!resIso) return;
+
+    const payload = {
+     employeeName: addForm.employeeName,
+     noticeDate: noticeIso,
+     reason: addForm.reason,
+     department: addForm.department,
+     resignationDate: resIso,
+    };
+
+    socket.emit("hr/resignation/add-resignation", payload);
+    // modal has data-bs-dismiss; optional: reset form
+    setAddForm({
+      employeeName: "",
+      department: "",
+      reason: "",
+      noticeDate: "",                    // YYYY-MM-DD from DatePicker
+      resignationDate:"",
+    });
+    socket.emit("hr/resignation/resignationlist", { type: "last7days" });
+    socket.emit("hr/resignation/resignation-details");
+    };
+
+  const handleEditSave = () => {
+      if (!socket) return;
+
+      // basic validation
+      if (!editForm.employeeName || !editForm.noticeDate || !editForm.reason || !editForm.department || !editForm.resignationDate) {
+        // toast.warn("Please fill required fields");
+        return;
+    }
+    
+    const noticeIso = toIsoFromDDMMYYYY(editForm.noticeDate);
+    if (!noticeIso) {
+    // toast.error("Invalid notice date");
+        return;
+    }
+    const resIso= toIsoFromDDMMYYYY(editForm.resignationDate);
+    if (!resIso) return;
+
+    const payload = {
+     employeeName: editForm.employeeName,
+     noticeDate: noticeIso,
+     reason: editForm.reason,
+     department: editForm.department,
+     resignationDate: resIso,
+     resignationId: editForm.resignationId,
+    };
+
+    socket.emit("hr/resignation/update-resignation", payload);
+    // modal has data-bs-dismiss; optional: reset form
+    setEditForm({
+      employeeName: "",
+      department: "",
+      reason: "",
+      noticeDate: "",                    // YYYY-MM-DD from DatePicker
+      resignationDate:"",
+      resignationId:"",
+    });
+    socket.emit("hr/resignation/resignationlist", { type: "last7days" });
+    socket.emit("hr/resignation/resignation-details");
+    };
+
+    
+
+  const fetchStats = useCallback(() => {
+    if (!socket) return;
+    socket.emit("hr/resignation/resignation-details");
+  }, [socket]);
+
+  // initial + reactive fetch
+  useEffect(() => {
+    if (!socket) return;
+    fetchList(filterType, customRange);
+    fetchStats();
+  }, [socket, fetchList, fetchStats, filterType, customRange]);
+
+
+  // ui events
+  type Option = { value: string; label: string };
+    const handleFilterChange = (opt: Option | null) => {
+    const value = opt?.value ?? "last7days";
+    setFilterType(value);
+    if (value !== "custom") {
+      setCustomRange({});
+      fetchList(value);
+    }
+  };
+
+  const handleCustomRange = (_: any, dateStrings: [string, string]) => {
+    if (dateStrings && dateStrings[0] && dateStrings[1]) {
+      const range = { startDate: dateStrings[0], endDate: dateStrings[1] };
+      setCustomRange(range);
+      fetchList("custom", range);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (!socket || selectedKeys.length === 0) return;
+    if (window.confirm(`Delete ${selectedKeys.length} record(s)? This cannot be undone.`)) {
+      socket.emit("hr/resignation/delete-resignation", selectedKeys);
+    }
+  };
+
+const handleSelectionChange = (keys: React.Key[]) => {
+  setSelectedKeys(keys as string[]);
+};
+
+  // table columns (preserved look, wired to backend fields)
+  const columns: any[] = [
     {
       title: "Resigning Employee",
-      dataIndex: "Resigning_Employee",
-      render: (text: String, record: any) => (
-        <div className="d-flex align-items-center">
-          <Link to={all_routes.resignation} className="avatar avatar-md me-2">
-            <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
-              className="rounded-circle"
-              alt="user"
-            />
-          </Link>
-          <h6 className="fw-medium">
-            <Link to={all_routes.resignation}>{record.Resigning_Employee}</Link>
-          </h6>
-        </div>
-      ),
-      sorter: (a: any, b: any) =>
-        a.Resigning_Employee.length - b.Resigning_Employee.length,
+      dataIndex: "employeeName",
+      
+      sorter: (a: ResignationRow, b: ResignationRow) => a.employeeName.localeCompare(b.employeeName),
     },
     {
       title: "Department",
-      dataIndex: "Department",
-      sorter: (a: any, b: any) => a.Department.length - b.Department.length,
+      dataIndex: "department",
     },
     {
       title: "Reason",
-      dataIndex: "Reason",
-      sorter: (a: any, b: any) => a.Reason.length - b.Reason.length,
+      dataIndex: "reason",
     },
     {
       title: "Notice Date",
-      dataIndex: "Notice_Date",
-      sorter: (a: any, b: any) => a.Notice_Date.length - b.Notice_Date.length,
+      dataIndex: "noticeDate",
+      render: (val: string) => fmtYMD(val),
+      sorter: (a: ResignationRow, b: ResignationRow) =>
+        new Date(a.noticeDate).getTime() - new Date(b.noticeDate).getTime(),
     },
     {
       title: "Resignation Date",
-      dataIndex: "Resignation_Date",
-      sorter: (a: any, b: any) =>
-        a.Resignation_Date.length - b.Resignation_Date.length,
+      dataIndex: "resignationDate",
+      render: (val: string) => fmtYMD(val),
+      sorter: (a: ResignationRow, b: ResignationRow) =>
+        new Date(a.resignationDate).getTime() - new Date(b.resignationDate).getTime(),
     },
     {
-      title: "",
-      dataIndex: "actions",
-      render: () => (
-        <div className="action-icon d-inline-flex">
-          <Link
-            to="#"
-            className="me-2"
-            data-bs-toggle="modal"
-            data-inert={true}
-            data-bs-target="#edit_resignation"
-          >
+      title:"               ",
+      dataIndex: "resignationId", // must match your row field
+    render: (id: string, record: ResignationRow) => (
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <a href="#"
+  data-bs-toggle="modal"
+  data-bs-target="#edit_resignation"
+  onClick={(e) => {
+    // still prefill the form before Bootstrap opens it
+    openEditModal(record);
+  }}>
             <i className="ti ti-edit" />
-          </Link>
-          <Link
-            to="#"
-            data-bs-toggle="modal"
-            data-inert={true}
-            data-bs-target="#delete_modal"
-          >
-            <i className="ti ti-trash" />
-          </Link>
-        </div>
-      ),
+          </a>
+        <a
+          aria-label="Delete"
+          onClick={(e) => {
+            e.preventDefault();
+            confirmDelete(() =>
+              socket?.emit("hr/resignation/delete-resignation", [id]));
+          }}
+        >
+          <i className="ti ti-trash" />
+        </a>
+      </div>
+    ),
     },
   ];
-  return (
-    <>
-      {/* Page Wrapper */}
-      <div className="page-wrapper">
-        <div className="content">
-          {/* Breadcrumb */}
-          <div className="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
-            <div className="my-auto mb-2">
-              <h2 className="mb-1">Resignation</h2>
-              <nav>
-                <ol className="breadcrumb mb-0">
-                  <li className="breadcrumb-item">
-                    <Link to={all_routes.adminDashboard}>
-                      <i className="ti ti-smart-home" />
-                    </Link>
-                  </li>
-                  <li className="breadcrumb-item">Performance</li>
-                  <li className="breadcrumb-item active" aria-current="page">
-                    Resignation
-                  </li>
-                </ol>
-              </nav>
-            </div>
-            <div className="d-flex my-xl-auto right-content align-items-center flex-wrap ">
-              <div className="mb-2">
-                <Link
-                  to="#"
-                  className="btn btn-primary d-flex align-items-center"
-                  data-bs-toggle="modal"
-                  data-inert={true}
-                  data-bs-target="#new_resignation"
-                >
-                  <i className="ti ti-circle-plus me-2" />
-                  Add Resignation
-                </Link>
-              </div>
-              <div className="head-icons ms-2">
-                <CollapseHeader />
-              </div>
-            </div>
-          </div>
-          {/* /Breadcrumb */}
-          {/* Resignation List */}
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="card">
-                <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-                  <h5 className="d-flex align-items-center">
-                    Resignation List
-                  </h5>
-                  <div className="d-flex align-items-center flex-wrap row-gap-3">
-                    <div className="input-icon position-relative me-2">
-                      <span className="input-icon-addon">
-                        <i className="ti ti-calendar" />
-                      </span>
-                      <input
-                        type="text"
-                        className="form-control date-range bookingrange"
-                        placeholder="dd/mm/yyyy - dd/mm/yyyy "
-                      />
+
+  const rowSelection = {
+    selectedRowKeys: selectedKeys,
+    onChange: (keys: React.Key[]) => setSelectedKeys(keys as string[]),
+  };
+
+    return (
+        <>
+            {/* Page Wrapper */}
+            <div className="page-wrapper">
+                <div className="content">
+                    {/* Breadcrumb */}
+                    <div className="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
+                        <div className="my-auto mb-2">
+                            <h2 className="mb-1">Resignation</h2>
+                            <nav>
+                                <ol className="breadcrumb mb-0">
+                                    <li className="breadcrumb-item">
+                                        <Link to={all_routes.adminDashboard}>
+                                            <i className="ti ti-smart-home" />
+                                        </Link>
+                                    </li>
+                                    <li className="breadcrumb-item">HR</li>
+                                    <li className="breadcrumb-item active" aria-current="page">
+                                        Resignation
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div className="d-flex my-xl-auto right-content align-items-center flex-wrap ">
+                            <div className="mb-2">
+                                <Link
+                                    to="#"
+                                    className="btn btn-primary d-flex align-items-center"
+                                    data-bs-toggle="modal" data-inert={true}
+                                    data-bs-target="#new_resignation"
+                                >
+                                    <i className="ti ti-circle-plus me-2" />
+                                    Add Resignation
+                                </Link>
+                            </div>
+                            <div className="head-icons ms-2">
+                                <CollapseHeader />
+                            </div>
+                        </div>
                     </div>
-                    <div className="dropdown">
-                      <Link
-                        to="#"
-                        className="dropdown-toggle btn btn-white d-inline-flex align-items-center fs-12"
-                        data-bs-toggle="dropdown"
-                      >
-                        <p className="fs-12 d-inline-flex me-1">Sort By : </p>
-                        Last 7 Days
-                      </Link>
-                      <ul className="dropdown-menu  dropdown-menu-end p-3">
-                        <li>
-                          <Link to="#" className="dropdown-item rounded-1">
-                            Recently Added
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="#" className="dropdown-item rounded-1">
-                            Ascending
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to="#" className="dropdown-item rounded-1">
-                            Desending
-                          </Link>
-                        </li>
-                      </ul>
+                    {/* /Breadcrumb */}
+                    {/* Resignation List */}
+                    <div className="row">
+                        <div className="col-sm-12">
+                            <div className="card">
+                                <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
+                                    <h5 className="d-flex align-items-center">Resignation List</h5>
+                                    <div className="d-flex align-items-center flex-wrap row-gap-3">
+                                        <div className="dropdown">
+                                            <Link
+                                                to="#"
+                                                className="d-inline-flex align-items-center fs-12"
+                                            >
+                                                <label className="fs-12 d-inline-flex me-1">Sort By : </label>
+                                            <CommonSelect
+                                              className="select"
+                                              options={[
+                                                { value: "today", label: "Today" },
+                                                { value: "yesterday", label: "Yesterday" },
+                                                { value: "last7days", label: "Last 7 Days" },
+                                                { value: "last30days", label: "Last 30 Days" },
+                                                { value: "thismonth", label: "This Month" },
+                                                { value: "lastmonth", label: "Last Month" },
+                                                { value: "thisyear", label: "This Year" },
+                                              ]}
+                                              defaultValue={filterType}
+                                              onChange={handleFilterChange}
+                                            />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="card-body p-0">
+                                    <Table dataSource={rows} columns={columns} Selection={true} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                  </div>
+                    {/* /Resignation List  */}
                 </div>
-                <div className="card-body p-0">
-                  <Table dataSource={data} columns={columns} Selection={true} />
+                {/* Footer */}
+                <div className="footer d-sm-flex align-items-center justify-content-between bg-white border-top p-3">
+                    <p className="mb-0">2014 - 2025 © SmartHR.</p>
+                    <p>
+                        Designed &amp; Developed By{" "}
+                        <Link to="#" className="text-primary">
+                            Dreams
+                        </Link>
+                    </p>
                 </div>
-              </div>
+                {/* /Footer */}
             </div>
-          </div>
-          {/* /Resignation List  */}
-        </div>
-        {/* Footer */}
-        <div className="footer d-sm-flex align-items-center justify-content-between bg-white border-top p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
-        {/* /Footer */}
-      </div>
-      {/* /Page Wrapper */}
-      <>
-        {/* Add Resignation */}
+            {/* Add Resignation */}
         <div className="modal fade" id="new_resignation">
           <div className="modal-dialog modal-dialog-centered modal-md">
             <div className="modal-content">
@@ -211,15 +518,38 @@ const Resignation = () => {
                   <i className="ti ti-x" />
                 </button>
               </div>
-              <form action="resignation.html">
+              <form>
                 <div className="modal-body pb-0">
                   <div className="row">
                     <div className="col-md-12">
                       <div className="mb-3">
-                        <label className="form-label">Resigning Employee</label>
-                        <CommonSelect
-                          className="select"
-                          options={termination}
+                        <label className="form-label">
+                          Resigning Employee
+                        </label>
+                        <textarea
+                          className="form-control"
+                          rows={1} defaultValue={addForm.employeeName} onChange ={(e) => setAddForm({ ...addForm, employeeName: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-12">
+                      <div className="mb-3">
+                        <label className="form-label">
+                          Department
+                        </label>
+                        <textarea
+                          className="form-control"
+                          rows={1} defaultValue={addForm.department} onChange ={(e) => setAddForm({ ...addForm, department: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-12">
+                      <div className="mb-3">
+                        <label className="form-label">Reason</label>
+                        <textarea
+                          className="form-control"
+                          rows={3}
+                          defaultValue={addForm.reason} onChange={(e) => setAddForm({ ...addForm, reason: e.target.value })}
                         />
                       </div>
                     </div>
@@ -234,7 +564,7 @@ const Resignation = () => {
                               type: "mask",
                             }}
                             getPopupContainer={getModalContainer}
-                            placeholder="DD-MM-YYYY"
+                            placeholder="DD-MM-YYYY" onChange={(_, dateString) => setAddForm({ ...addForm, noticeDate: dateString as string })}
                           />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar text-gray-7" />
@@ -253,22 +583,12 @@ const Resignation = () => {
                               type: "mask",
                             }}
                             getPopupContainer={getModalContainer}
-                            placeholder="DD-MM-YYYY"
+                            placeholder="DD-MM-YYYY" onChange={(_, dateString) => setAddForm({ ...addForm, resignationDate: dateString as string })}
                           />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar text-gray-7" />
                           </span>
                         </div>
-                      </div>
-                    </div>
-                    <div className="col-md-12">
-                      <div className="mb-3">
-                        <label className="form-label">Reason</label>
-                        <textarea
-                          className="form-control"
-                          rows={3}
-                          defaultValue={""}
-                        />
                       </div>
                     </div>
                   </div>
@@ -285,6 +605,7 @@ const Resignation = () => {
                     type="button"
                     data-bs-dismiss="modal"
                     className="btn btn-primary"
+                    onClick={handleAddSave}
                   >
                     Add Resignation
                   </button>
@@ -309,16 +630,41 @@ const Resignation = () => {
                   <i className="ti ti-x" />
                 </button>
               </div>
-              <form action="resignation.html">
+              <form>
                 <div className="modal-body pb-0">
                   <div className="row">
                     <div className="col-md-12">
                       <div className="mb-3">
-                        <label className="form-label">Resigning Employee</label>
+                        <label className="form-label">
+                          Resigning Employee&nbsp;
+                        </label>
                         <input
                           type="text"
                           className="form-control"
-                          defaultValue="Anthony Lewis"
+                          defaultValue={editForm.employeeName}
+                          onChange={(e) => setEditForm({ ...editForm, employeeName: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-12">
+                      <div className="mb-3">
+                        <label className="form-label">Department</label>
+                        <textarea
+                          className="form-control"
+                          rows={1}
+                          defaultValue={editForm.department}
+                          onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-12">
+                      <div className="mb-3">
+                        <label className="form-label">Reason</label>
+                        <textarea
+                          className="form-control"
+                          rows={3}
+                          defaultValue={editForm.reason}
+                          onChange={(e) => setEditForm({ ...editForm, reason: e.target.value })}
                         />
                       </div>
                     </div>
@@ -327,14 +673,13 @@ const Resignation = () => {
                         <label className="form-label">Notice Date</label>
                         <div className="input-icon-end position-relative">
                           <DatePicker
-                            className="form-control datetimepicker"
-                            format={{
-                              format: "DD-MM-YYYY",
-                              type: "mask",
-                            }}
-                            getPopupContainer={getModalContainer}
-                            placeholder="DD-MM-YYYY"
-                          />
+                              className="form-control datetimepicker"
+                              format={{ format: "DD-MM-YYYY", type: "mask" }}
+                              getPopupContainer={getModalContainer}
+                              placeholder="DD-MM-YYYY"
+                              defaultValue={editForm.noticeDate ? dayjs(editForm.noticeDate, "DD-MM-YYYY") : null}
+                              onChange={(_, dateString) => setEditForm({ ...editForm, noticeDate: dateString as string })}
+                            />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar text-gray-7" />
                           </span>
@@ -346,28 +691,17 @@ const Resignation = () => {
                         <label className="form-label">Resignation Date</label>
                         <div className="input-icon-end position-relative">
                           <DatePicker
-                            className="form-control datetimepicker"
-                            format={{
-                              format: "DD-MM-YYYY",
-                              type: "mask",
-                            }}
-                            getPopupContainer={getModalContainer}
-                            placeholder="DD-MM-YYYY"
-                          />
+                              className="form-control datetimepicker"
+                              format={{ format: "DD-MM-YYYY", type: "mask" }}
+                              getPopupContainer={getModalContainer}
+                              placeholder="DD-MM-YYYY"
+                              defaultValue={editForm.resignationDate ? dayjs(editForm.resignationDate, "DD-MM-YYYY") : null}
+                              onChange={(_, dateString) => setEditForm({ ...editForm, resignationDate: dateString as string })}
+                            />
                           <span className="input-icon-addon">
                             <i className="ti ti-calendar text-gray-7" />
                           </span>
                         </div>
-                      </div>
-                    </div>
-                    <div className="col-md-12">
-                      <div className="mb-3">
-                        <label className="form-label">Reason</label>
-                        <textarea
-                          className="form-control"
-                          rows={3}
-                          defaultValue={"Career Change"}
-                        />
                       </div>
                     </div>
                   </div>
@@ -384,6 +718,7 @@ const Resignation = () => {
                     type="button"
                     data-bs-dismiss="modal"
                     className="btn btn-primary"
+                    onClick={handleEditSave}
                   >
                     Save Changes
                   </button>
@@ -393,39 +728,10 @@ const Resignation = () => {
           </div>
         </div>
         {/* /Edit Resignation */}
-        {/* Delete Modal */}
-        <div className="modal fade" id="delete_modal">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-body text-center">
-                <span className="avatar avatar-xl bg-transparent-danger text-danger mb-3">
-                  <i className="ti ti-trash-x fs-36" />
-                </span>
-                <h4 className="mb-1">Confirm Delete</h4>
-                <p className="mb-3">
-                  You want to delete all the marked items, this cant be undone
-                  once you delete.
-                </p>
-                <div className="d-flex justify-content-center">
-                  <Link
-                    to="#"
-                    className="btn btn-light me-3"
-                    data-bs-dismiss="modal"
-                  >
-                    Cancel
-                  </Link>
-                  <Link to={all_routes.resignation} className="btn btn-danger">
-                    Yes, Delete
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* /Delete Modal */}
-      </>
-    </>
-  );
+
+       </>
+
+    );
 };
 
-export default Resignation;
+export default Resignation

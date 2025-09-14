@@ -32,6 +32,8 @@ export const getTenantCollections = (tenantDbName) => {
     stats: db.collection("stats"),
     companies: db.collection("companies"),
     details: db.collection("details"),     // for company details
+    contacts: db.collection("contacts"),
+    details: db.collection("details"),     // for contact details
     leads: db.collection("leads"),
 
     // Admin dashboard collections
@@ -74,6 +76,18 @@ export const getTenantCollections = (tenantDbName) => {
     socialFeeds: db.collection("socialFeeds"),
     follows: db.collection("follows"),
     hashtags: db.collection("hashtags"),
+
+       // hr employee section collection
+    hr: db.collection("hr"),   
+    permissions:  db.collection("permissions"),
+    policy: db.collection("policy"),
+    designations: db.collection("designations"),
+    assets: db.collection("assets"),
+    termination: db.collection("termination"),
+    resignation: db.collection("resignation"),
+
+    // notes - application
+    notes: db.collection("notes"),
   };
 };
 
@@ -87,6 +101,7 @@ export const getsuperadminCollections = () => {
   return {
     stats: db.collection("stats"),
     companiesCollection: db.collection("companies"),
+    contacts: db.collection("contacts"),
     packagesCollection: db.collection("packages"),
     subscriptionsCollection: db.collection("subscriptions"),
   };
