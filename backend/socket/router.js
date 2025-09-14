@@ -12,7 +12,6 @@ import userSocketController from "../controllers/user/user.socket.controller.js"
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import candidateController from "../controllers/candidates/candidates.controllers.js";
 import jobController from "../controllers/jobs/jobs.controllers.js";
-
 import employeeController from "../controllers/employee/employee.controller.js";
 
 const router = (socket, io, role) => {
