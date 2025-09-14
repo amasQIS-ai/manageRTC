@@ -1,51 +1,25 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { all_routes } from "../../router/all_routes";
-import { useJobs } from "../../../hooks/useJobs";
+import { useSocket } from "../../../SocketContext";
+import { Socket } from "socket.io-client";
+import { useJobs, Job } from "../../../hooks/useJobs";
 import Table from "../../../core/common/dataTable/index";
 import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
-import PredefinedDateRanges from "../../../core/common/datePicker";
 import ImageWithBasePath from "../../../core/common/imageWithBasePath";
-import { DatePicker } from "antd";
-import CommonSelect from "../../../core/common/commonSelect";
 import AddJob from "./add_job";
 import EditJob from "./edit_job";
 import DeleteJob from "./delete_job";
 import { message } from "antd";
 
-interface Job {
-  _id: string;
-  title: string;
-  category: string;
-  type: string;
-  description?: string;
-  requirements?: string;
-  skills?: string[];
-  tags?: string[];
-  location: {
-    country: string;
-    state: string;
-    city: string;
-  };
-  salaryRange: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  numberOfPositions: number;
-  status: 'Active' | 'Inactive';
-  appliedCount?: number;
-  companyId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 const JobList = () => {
+  const socket = useSocket() as Socket | null;
+
+  // State management using the custom hook
   const {
     jobs,
     stats,
     fetchAllData,
-    fetchStats,
     loading,
     error,
     exportPDF,
@@ -54,21 +28,45 @@ const JobList = () => {
   } = useJobs();
 
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-
+  
   // Filter states
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedType, setSelectedType] = useState('');
-  const [selectedSort, setSelectedSort] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedSort, setSelectedSort] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  // Extract unique categories and types for filters
+  const [categories, setCategories] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   // Initialize data fetch
   useEffect(() => {
     console.log("JobList component mounted");
     fetchAllData();
-    fetchStats();
-  }, [fetchAllData, fetchStats]);
+  }, [fetchAllData]);
+
+  // Extract unique values for filters whenever jobs change
+  useEffect(() => {
+    if (jobs && jobs.length > 0) {
+      const uniqueCategories = Array.from(new Set(
+        jobs
+          .map(j => j.category)
+          .filter((category): category is string => Boolean(category))
+      ));
+      
+      const uniqueTypes = Array.from(new Set(
+        jobs
+          .map(j => j.type)
+          .filter((type): type is string => Boolean(type))
+      ));
+
+      setCategories(uniqueCategories);
+      setTypes(uniqueTypes);
+    }
+  }, [jobs]);
 
   // Apply filters whenever jobs or filter states change
   useEffect(() => {
@@ -79,8 +77,8 @@ const JobList = () => {
       selectedType,
       selectedSort,
       searchQuery,
+      dateRange,
     });
-    console.log("[JobList] Total jobs before filtering:", jobs.length);
 
     if (!jobs || jobs.length === 0) {
       setFilteredJobs([]);
@@ -90,42 +88,44 @@ const JobList = () => {
     let result = [...jobs];
 
     // Status filter
-    if (selectedStatus && selectedStatus !== '') {
-      console.log("[JobList] Filtering by status:", selectedStatus);
+    if (selectedStatus && selectedStatus !== "") {
       result = result.filter((job) => job.status === selectedStatus);
-      console.log("[JobList] After status filter:", result.length);
     }
 
     // Category filter
-    if (selectedCategory && selectedCategory !== '') {
-      console.log("[JobList] Filtering by category:", selectedCategory);
+    if (selectedCategory && selectedCategory !== "") {
       result = result.filter((job) => job.category === selectedCategory);
-      console.log("[JobList] After category filter:", result.length);
     }
 
     // Type filter
-    if (selectedType && selectedType !== '') {
-      console.log("[JobList] Filtering by type:", selectedType);
+    if (selectedType && selectedType !== "") {
       result = result.filter((job) => job.type === selectedType);
-      console.log("[JobList] After type filter:", result.length);
+    }
+
+    // Date range filter
+    if (dateRange.start && dateRange.end) {
+      const startDate = new Date(dateRange.start);
+      const endDate = new Date(dateRange.end);
+      result = result.filter((job) => {
+        const createdDate = new Date(job.createdAt);
+        return createdDate >= startDate && createdDate <= endDate;
+      });
     }
 
     // Search query filter
-    if (searchQuery && searchQuery.trim() !== '') {
-      console.log("[JobList] Filtering by search query:", searchQuery);
+    if (searchQuery && searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (job) =>
-          job.title.toLowerCase().includes(query) ||
-          job.category.toLowerCase().includes(query) ||
-          job.type.toLowerCase().includes(query) ||
-          (job.description && job.description.toLowerCase().includes(query)) ||
-          (job.skills && job.skills.some(skill => skill.toLowerCase().includes(query))) ||
-          (job.location && job.location.city.toLowerCase().includes(query)) ||
-          (job.location && job.location.state.toLowerCase().includes(query)) ||
-          (job.location && job.location.country.toLowerCase().includes(query))
-      );
-      console.log("[JobList] After search filter:", result.length);
+      result = result.filter((job) => {
+        const title = job.title?.toLowerCase() || '';
+        const description = job.description?.toLowerCase() || '';
+        const skills = job.skills?.join(' ').toLowerCase() || '';
+        const location = `${job.location?.city || ''} ${job.location?.state || ''} ${job.location?.country || ''}`.toLowerCase();
+        
+        return title.includes(query) ||
+               description.includes(query) ||
+               skills.includes(query) ||
+               location.includes(query);
+      });
     }
 
     // Sort
@@ -133,77 +133,73 @@ const JobList = () => {
       result.sort((a, b) => {
         const dateA = new Date(a.createdAt);
         const dateB = new Date(b.createdAt);
+        
         switch (selectedSort) {
-          case 'asc':
+          case "title_asc":
             return a.title.localeCompare(b.title);
-          case 'desc':
+          case "title_desc":
             return b.title.localeCompare(a.title);
-          case 'recent':
+          case "date_recent":
             return dateB.getTime() - dateA.getTime();
-          case 'oldest':
+          case "date_oldest":
             return dateA.getTime() - dateB.getTime();
-          case 'salary':
-            return (b.salaryRange?.min || 0) - (a.salaryRange?.min || 0);
+          case "salary_high":
+            return (b.salaryRange?.max || 0) - (a.salaryRange?.max || 0);
+          case "salary_low":
+            return (a.salaryRange?.min || 0) - (b.salaryRange?.min || 0);
+          case "applications":
+            return (b.appliedCount || 0) - (a.appliedCount || 0);
           default:
             return 0;
         }
       });
     }
 
-    console.log("[JobList] Final filtered jobs count:", result.length);
     setFilteredJobs(result);
-  }, [jobs, selectedStatus, selectedCategory, selectedType, selectedSort, searchQuery]);
+  }, [jobs, selectedStatus, selectedCategory, selectedType, selectedSort, searchQuery, dateRange]);
 
   // Handle filter changes
   const handleStatusChange = (status: string) => {
-    console.log("[JobList] Status filter changed to:", status);
     setSelectedStatus(status);
   };
 
   const handleCategoryChange = (category: string) => {
-    console.log("[JobList] Category filter changed to:", category);
     setSelectedCategory(category);
   };
 
   const handleTypeChange = (type: string) => {
-    console.log("[JobList] Type filter changed to:", type);
     setSelectedType(type);
   };
 
   const handleSortChange = (sort: string) => {
-    console.log("[JobList] Sort filter changed to:", sort);
     setSelectedSort(sort);
   };
 
   const handleSearchChange = (query: string) => {
-    console.log("[JobList] Search query changed to:", query);
     setSearchQuery(query);
   };
 
   const handleClearFilters = () => {
-    console.log("[JobList] Clearing all filters");
-    setSelectedStatus('');
-    setSelectedCategory('');
-    setSelectedType('');
-    setSelectedSort('');
-    setSearchQuery('');
+    setSelectedStatus("");
+    setSelectedCategory("");
+    setSelectedType("");
+    setSelectedSort("");
+    setSearchQuery("");
+    setDateRange({ start: "", end: "" });
   };
 
-  // Handle edit job
+  // Handle job actions
   const handleEditJob = (job: Job) => {
     setSelectedJob(job);
-    // Dispatch custom event that edit_job.tsx is listening for
     window.dispatchEvent(
-      new CustomEvent('edit-job', { detail: { job } })
+      new CustomEvent("edit-job", { detail: { job } })
     );
   };
 
-  // Handle delete job
   const handleDeleteJob = (job: Job) => {
     setSelectedJob(job);
-    // Dispatch custom event that delete_job.tsx is listening for
     window.dispatchEvent(
-      new CustomEvent('delete-job', { detail: { job } })
+      new CustomEvent("delete-job", { detail: { job } })
     );
   };
 
@@ -216,28 +212,53 @@ const JobList = () => {
     exportExcel();
   }, [exportExcel]);
 
-  // Table columns
+  // Get status badge class
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "badge bg-success";
+      case "Inactive":
+        return "badge bg-danger";
+      default:
+        return "badge bg-light text-dark";
+    }
+  };
+
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "software":
+        return "ti ti-code";
+      case "hardware":
+        return "ti ti-cpu";
+      case "design":
+        return "ti ti-palette";
+      case "marketing":
+        return "ti ti-speakerphone";
+      case "sales":
+        return "ti ti-chart-line";
+      case "hr":
+        return "ti ti-users";
+      case "finance":
+        return "ti ti-coins";
+      default:
+        return "ti ti-briefcase";
+    }
+  };
+
+  // Table columns configuration
   const columns = [
-    {
-      title: "Job ID",
-      dataIndex: "_id",
-      render: (text: string, record: Job) => (
-        <Link to={all_routes.jobdetails.replace(':jobId', record._id)} className="link-default">
-          {record._id.slice(-8).toUpperCase()}
-        </Link>
-      ),
-      sorter: (a: Job, b: Job) => a._id.localeCompare(b._id),
-    },
     {
       title: "Job Title",
       dataIndex: "title",
       render: (text: string, record: Job) => (
         <div className="d-flex align-items-center">
-          <div className="ms-2">
-            <h6 className="fw-medium">
-              <Link to={all_routes.jobdetails.replace(':jobId', record._id)}>{record.title}</Link>
-            </h6>
-            <span className="fs-12 fw-normal text-gray">{record.category}</span>
+          <div className="avatar avatar-sm me-2 bg-primary-transparent rounded">
+            <i className={`${getCategoryIcon(record.category)} fs-16`}></i>
+          </div>
+          <div>
+            <h6 className="fw-medium mb-0">{record.title}</h6>
+            <span className="fs-13 text-muted">{record.category}</span>
           </div>
         </div>
       ),
@@ -246,102 +267,100 @@ const JobList = () => {
     {
       title: "Type",
       dataIndex: "type",
-      render: (text: string) => (
-        <span className="badge badge-soft-info">{text}</span>
+      render: (text: string, record: Job) => (
+        <span className="badge bg-light text-dark">{record.type}</span>
       ),
       sorter: (a: Job, b: Job) => a.type.localeCompare(b.type),
     },
     {
-      title: "Applications",
-      dataIndex: "appliedCount",
-      render: (text: number) => <span>{text || 0} Applicants</span>,
-      sorter: (a: Job, b: Job) => (a.appliedCount || 0) - (b.appliedCount || 0),
-    },
-    {
       title: "Location",
       dataIndex: "location",
-      render: (location: { city: string; state: string; country: string }) => (
+      render: (text: any, record: Job) => (
         <span>
-          {location.city}, {location.state}, {location.country}
+          {record.location?.city && record.location?.state && record.location?.country 
+            ? `${record.location.city}, ${record.location.state}, ${record.location.country}`
+            : "Not specified"}
         </span>
       ),
-      sorter: (a: Job, b: Job) => a.location.city.localeCompare(b.location.city),
     },
     {
       title: "Salary Range",
       dataIndex: "salaryRange",
-      render: (salaryRange: { min: number; max: number; currency: string }) => (
+      render: (text: any, record: Job) => (
         <span>
-          {salaryRange.min.toLocaleString()} - {salaryRange.max.toLocaleString()} {salaryRange.currency} / month
+          {record.salaryRange?.min && record.salaryRange?.max 
+            ? `${record.salaryRange.min.toLocaleString()} - ${record.salaryRange.max.toLocaleString()} ${record.salaryRange.currency}`
+            : "Not specified"}
         </span>
       ),
-      sorter: (a: Job, b: Job) => (a.salaryRange?.min || 0) - (b.salaryRange?.min || 0),
+      sorter: (a: Job, b: Job) => (a.salaryRange?.max || 0) - (b.salaryRange?.max || 0),
     },
     {
-      title: "Posted Date",
-      dataIndex: "createdAt",
-      render: (text: string) => new Date(text).toLocaleDateString(),
-      sorter: (a: Job, b: Job) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      title: "Positions",
+      dataIndex: "numberOfPositions",
+      render: (text: string, record: Job) => (
+        <span>{record.numberOfPositions}</span>
+      ),
+      sorter: (a: Job, b: Job) => a.numberOfPositions - b.numberOfPositions,
+    },
+    {
+      title: "Applications",
+      dataIndex: "appliedCount",
+      render: (text: string, record: Job) => (
+        <span className="fw-semibold text-primary">{record.appliedCount || 0}</span>
+      ),
+      sorter: (a: Job, b: Job) => (a.appliedCount || 0) - (b.appliedCount || 0),
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (text: string) => (
-        <span
-          className={`badge ${
-            text === "Active" ? "badge-soft-success" : "badge-soft-warning"
-          }`}
-        >
-          {text}
+      render: (text: string, record: Job) => (
+        <span className={getStatusBadgeClass(record.status)}>
+          {record.status}
         </span>
       ),
       sorter: (a: Job, b: Job) => a.status.localeCompare(b.status),
     },
     {
-      title: "",
+      title: "Posted Date",
+      dataIndex: "createdAt",
+      render: (text: string, record: Job) => {
+        const date = new Date(record.createdAt);
+        return date.toLocaleDateString();
+      },
+      sorter: (a: Job, b: Job) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      },
+    },
+    {
+      title: "Actions",
       dataIndex: "actions",
       render: (text: any, record: Job) => (
-        <div className="d-flex align-items-center">
-          <div className="dropdown">
-            <Link
-              to="#"
-              className="btn btn-white btn-icon btn-sm d-flex align-items-center justify-content-center"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i className="ti ti-dots-vertical fs-14"></i>
-            </Link>
-            <ul className="dropdown-menu dropdown-menu-right p-3">
-              <li>
-                <Link
-                  className="dropdown-item rounded-1"
-                  to="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#edit_job"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleEditJob(record);
-                  }}
-                >
-                  <i className="ti ti-edit me-2"></i>Edit
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="dropdown-item rounded-1"
-                  to="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#delete_job"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleDeleteJob(record);
-                  }}
-                >
-                  <i className="ti ti-trash me-2"></i>Delete
-                </Link>
-              </li>
-            </ul>
-          </div>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            className="btn btn-sm btn-outline-primary"
+            onClick={(e) => {
+              e.preventDefault();
+              handleEditJob(record);
+            }}
+            data-bs-toggle="modal"
+            data-bs-target="#edit_job"
+          >
+            <i className="ti ti-edit"></i>
+          </button>
+          <button
+            className="btn btn-sm btn-outline-danger"
+            onClick={(e) => {
+              e.preventDefault();
+              handleDeleteJob(record);
+            }}
+            data-bs-toggle="modal"
+            data-bs-target="#delete_job"
+          >
+            <i className="ti ti-trash"></i>
+          </button>
         </div>
       ),
     },
@@ -353,17 +372,15 @@ const JobList = () => {
       <div className="page-wrapper">
         <div className="content">
           {/* Breadcrumb */}
-          <div className="d-md-flex d-block align-items-center justify-content-between page-breadcrumb mb-3">
+          <div className="d-md-flex d-block align-items-center justify-content-between mb-3">
             <div className="my-auto mb-2">
-              <h2 className="mb-1">Jobs</h2>
+              <h3 className="page-title mb-1">Jobs</h3>
               <nav>
                 <ol className="breadcrumb mb-0">
                   <li className="breadcrumb-item">
-                    <Link to={all_routes.adminDashboard}>
-                      <i className="ti ti-smart-home"></i>
-                    </Link>
+                    <Link to={all_routes.adminDashboard}>Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item">Employee</li>
+                  <li className="breadcrumb-item">Recruitment</li>
                   <li className="breadcrumb-item active" aria-current="page">
                     Job List
                   </li>
@@ -371,7 +388,7 @@ const JobList = () => {
               </nav>
             </div>
             <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
-              <div className="me-2 mb-2">
+               <div className="me-2 mb-2">
                 <div className="d-flex align-items-center border bg-white rounded p-1 me-2 icon-list">
                   <Link
                     to={all_routes.joblist}
@@ -387,16 +404,16 @@ const JobList = () => {
                   </Link>
                 </div>
               </div>
-              <div className="me-2 mb-2">
+              <div className="mb-2 me-2">
                 <div className="dropdown">
                   <Link
                     to="#"
-                    className="dropdown-toggle btn btn-white d-inline-flex align-items-center"
+                    className="btn btn-white d-inline-flex align-items-center"
                     data-bs-toggle="dropdown"
                   >
                     Export
                   </Link>
-                  <ul className="dropdown-menu  dropdown-menu-end p-3">
+                  <ul className="dropdown-menu dropdown-menu-end p-3">
                     <li>
                       <Link
                         to="#"
@@ -424,223 +441,394 @@ const JobList = () => {
                   </ul>
                 </div>
               </div>
-              <div className="mb-2">
+              <div className="mb-2 me-2">
                 <Link
                   to="#"
                   data-bs-toggle="modal"
                   data-bs-target="#add_job"
                   className="btn btn-primary d-flex align-items-center"
                 >
-                  <i className="ti ti-circle-plus me-2"></i>
-                  Add Job
+                  <i className="ti ti-plus me-2"></i>Add Job
                 </Link>
               </div>
+              <CollapseHeader />
             </div>
           </div>
           {/* /Breadcrumb */}
 
-          {/* Jobs Stats */}
+          {/* Job Statistics */}
           <div className="row">
-            <div className="col-xl-3 col-sm-6">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
-                    <div className="flex-grow-1">
-                      <p className="text-gray fs-14 fw-medium mb-1">Total Jobs</p>
-                      <h4 className="fw-bold">{stats?.totalJobs || 0}</h4>
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Total Jobs</p>
+                      <h4>{stats?.totalJobs || 0}</h4>
                     </div>
-                    <span className="avatar avatar-md bg-primary flex-shrink-0">
-                      <i className="ti ti-briefcase fs-16"></i>
+                    <span className="avatar avatar-lg bg-primary-transparent rounded-circle">
+                      <i className="ti ti-briefcase fs-20"></i>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-sm-6">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
-                    <div className="flex-grow-1">
-                      <p className="text-gray fs-14 fw-medium mb-1">Active Jobs</p>
-                      <h4 className="fw-bold">{stats?.activeJobs || 0}</h4>
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Active Jobs</p>
+                      <h4>{stats?.activeJobs || 0}</h4>
                     </div>
-                    <span className="avatar avatar-md bg-success flex-shrink-0">
-                      <i className="ti ti-circle-check fs-16"></i>
+                    <span className="avatar avatar-lg bg-success-transparent rounded-circle">
+                      <i className="ti ti-check fs-20"></i>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-sm-6">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
-                    <div className="flex-grow-1">
-                      <p className="text-gray fs-14 fw-medium mb-1">Inactive Jobs</p>
-                      <h4 className="fw-bold">{stats?.inactiveJobs || 0}</h4>
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Inactive Jobs</p>
+                      <h4>{stats?.inactiveJobs || 0}</h4>
                     </div>
-                    <span className="avatar avatar-md bg-warning flex-shrink-0">
-                      <i className="ti ti-circle-x fs-16"></i>
+                    <span className="avatar avatar-lg bg-danger-transparent rounded-circle">
+                      <i className="ti ti-x fs-20"></i>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="col-xl-3 col-sm-6">
+            <div className="col-xl-3 col-md-6">
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
-                    <div className="flex-grow-1">
-                      <p className="text-gray fs-14 fw-medium mb-1">New Jobs</p>
-                      <h4 className="fw-bold">{stats?.newJobs || 0}</h4>
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">New Jobs</p>
+                      <h4>{stats?.newJobs || 0}</h4>
                     </div>
-                    <span className="avatar avatar-md bg-info flex-shrink-0">
-                      <i className="ti ti-plus fs-16"></i>
+                    <span className="avatar avatar-lg bg-info-transparent rounded-circle">
+                      <i className="ti ti-plus fs-20"></i>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* /Jobs Stats */}
+          {/* /Job Statistics */}
 
-          {/* Jobs List */}
+          {/* Job List */}
           <div className="card">
-            <div className="card-header d-flex align-items-center justify-content-between flex-wrap row-gap-3">
-              <h5>Job List</h5>
-            </div>
-            <div className="card-body p-0">
-              <div className="custom-datatable-filter">
-                <div className="row">
-                  <div className="col-md-3">
-                    <div className="form-group">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search Jobs..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-2">
-                    <div className="form-group">
-                      <select
-                        className="form-select"
-                        value={selectedStatus}
-                        onChange={(e) => handleStatusChange(e.target.value)}
+            <div className="card-header d-flex align-items-center justify-content-between flex-wrap pb-0">
+              <h4 className="mb-3">Job List</h4>
+              <div className="d-flex align-items-center flex-wrap">
+                {/* Search Input */}
+                <div className="input-icon-start mb-3 me-2 position-relative">
+                  <span className="icon-addon">
+                    <i className="ti ti-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search jobs..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div className="dropdown mb-3 me-2">
+                  <Link
+                    to="#"
+                    className="btn btn-outline-light bg-white dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    {selectedStatus ? `Status: ${selectedStatus}` : "Select Status"}
+                  </Link>
+                  <div className="dropdown-menu dropdown-menu-end p-3">
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleStatusChange("");
+                        }}
                       >
-                        <option value="">All Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
+                        All Status
+                      </Link>
                     </div>
-                  </div>
-                  <div className="col-md-2">
-                    <div className="form-group">
-                      <select
-                        className="form-select"
-                        value={selectedCategory}
-                        onChange={(e) => handleCategoryChange(e.target.value)}
-                      >
-                        <option value="">All Categories</option>
-                        <option value="Software">Software</option>
-                        <option value="Hardware">Hardware</option>
-                        <option value="Networking">Networking</option>
-                        <option value="Design">Design</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Sales">Sales</option>
-                        <option value="HR">HR</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Operations">Operations</option>
-                        <option value="Others">Others</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-md-2">
-                    <div className="form-group">
-                      <select
-                        className="form-select"
-                        value={selectedType}
-                        onChange={(e) => handleTypeChange(e.target.value)}
-                      >
-                        <option value="">All Types</option>
-                        <option value="Full Time">Full Time</option>
-                        <option value="Part Time">Part Time</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Freelance">Freelance</option>
-                        <option value="Internship">Internship</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-md-2">
-                    <div className="form-group">
-                      <select
-                        className="form-select"
-                        value={selectedSort}
-                        onChange={(e) => handleSortChange(e.target.value)}
-                      >
-                        <option value="">Sort By</option>
-                        <option value="recent">Recently Added</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="asc">Title A-Z</option>
-                        <option value="desc">Title Z-A</option>
-                        <option value="salary">Salary High-Low</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-md-1">
-                    {(selectedStatus || selectedCategory || selectedType || selectedSort || searchQuery) && (
-                      <button
-                        className="btn btn-light"
-                        onClick={handleClearFilters}
-                      >
-                        Clear
-                      </button>
-                    )}
+                    {["Active", "Inactive"].map(status => (
+                      <div key={status} className="dropdown-item">
+                        <Link
+                          to="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleStatusChange(status);
+                          }}
+                        >
+                          {status}
+                        </Link>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              {loading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary" role="status">
-                    <span className="sr-only">Loading jobs...</span>
+                {/* Category Filter */}
+                <div className="dropdown mb-3 me-2">
+                  <Link
+                    to="#"
+                    className="btn btn-outline-light bg-white dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    {selectedCategory ? `Category: ${selectedCategory}` : "Select Category"}
+                  </Link>
+                  <div className="dropdown-menu dropdown-menu-end p-3">
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleCategoryChange("");
+                        }}
+                      >
+                        All Categories
+                      </Link>
+                    </div>
+                    {categories.map(category => (
+                      <div key={category} className="dropdown-item">
+                        <Link
+                          to="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleCategoryChange(category);
+                          }}
+                        >
+                          {category}
+                        </Link>
+                      </div>
+                    ))}
                   </div>
+                </div>
+
+                {/* Type Filter */}
+                <div className="dropdown mb-3 me-2">
+                  <Link
+                    to="#"
+                    className="btn btn-outline-light bg-white dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    {selectedType ? `Type: ${selectedType}` : "Select Type"}
+                  </Link>
+                  <div className="dropdown-menu dropdown-menu-end p-3">
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTypeChange("");
+                        }}
+                      >
+                        All Types
+                      </Link>
+                    </div>
+                    {types.map(type => (
+                      <div key={type} className="dropdown-item">
+                        <Link
+                          to="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleTypeChange(type);
+                          }}
+                        >
+                          {type}
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort Filter */}
+                <div className="dropdown mb-3 me-2">
+                  <Link
+                    to="#"
+                    className="btn btn-outline-light bg-white dropdown-toggle"
+                    data-bs-toggle="dropdown"
+                  >
+                    {selectedSort
+                      ? `Sort: ${
+                          selectedSort === "title_asc"
+                            ? "A-Z"
+                            : selectedSort === "title_desc"
+                            ? "Z-A"
+                            : selectedSort === "date_recent"
+                            ? "Recent"
+                            : selectedSort === "date_oldest"
+                            ? "Oldest"
+                            : selectedSort === "salary_high"
+                            ? "High Salary"
+                            : selectedSort === "salary_low"
+                            ? "Low Salary"
+                            : "Applications"
+                        }`
+                      : "Sort By"}
+                  </Link>
+                  <div className="dropdown-menu dropdown-menu-end p-3">
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("title_asc");
+                        }}
+                      >
+                        Title A-Z
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("title_desc");
+                        }}
+                      >
+                        Title Z-A
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("date_recent");
+                        }}
+                      >
+                        Recently Posted
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("date_oldest");
+                        }}
+                      >
+                        Oldest First
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("salary_high");
+                        }}
+                      >
+                        Highest Salary
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("salary_low");
+                        }}
+                      >
+                        Lowest Salary
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("applications");
+                        }}
+                      >
+                        Most Applications
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Clear Filters */}
+                {(selectedStatus ||
+                  selectedCategory ||
+                  selectedType ||
+                  selectedSort ||
+                  searchQuery ||
+                  dateRange.start ||
+                  dateRange.end) && (
+                  <div className="mb-3">
+                    <Link
+                      to="#"
+                      className="btn btn-outline-danger"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleClearFilters();
+                      }}
+                    >
+                      Clear Filters
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="card-body p-0">
+              {loading ? (
+                <div className="text-center p-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading jobs...</span>
+                  </div>
+                  <p className="mt-2">Loading jobs...</p>
                 </div>
               ) : error ? (
-                <div className="text-center py-4">
-                  <div className="alert alert-danger">
-                    <h6>Error loading jobs</h6>
-                    <p>{error}</p>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => fetchAllData()}
-                    >
-                      Retry
-                    </button>
+                <div className="text-center p-4">
+                  <div className="alert alert-danger" role="alert">
+                    <strong>Error loading jobs:</strong> {error}
                   </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => fetchAllData()}
+                  >
+                    <i className="ti ti-refresh me-2"></i>Retry
+                  </button>
                 </div>
               ) : (
                 <>
                   {/* Filter Summary */}
-                  <div className="px-3 pt-3">
-                    <p className="text-muted">
-                      Showing {filteredJobs.length} of {jobs.length} jobs
-                      {(selectedStatus || selectedCategory || selectedType || selectedSort || searchQuery) && (
-                        <span className="ms-2 text-info">
-                          (Filters applied:
+                  <div className="px-4 py-3 border-bottom bg-light">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span className="text-muted">
+                        Showing {filteredJobs.length} of {jobs.length} jobs
+                      </span>
+                      {(selectedStatus ||
+                        selectedCategory ||
+                        selectedType ||
+                        selectedSort ||
+                        searchQuery ||
+                        dateRange.start ||
+                        dateRange.end) && (
+                        <div className="text-muted small">
+                          Filters applied:
                           {selectedStatus && ` Status: ${selectedStatus}`}
                           {selectedCategory && ` Category: ${selectedCategory}`}
                           {selectedType && ` Type: ${selectedType}`}
                           {selectedSort && ` Sort: ${selectedSort}`}
                           {searchQuery && ` Search: "${searchQuery}"`}
-                          )
-                        </span>
+                        </div>
                       )}
-                    </p>
+                    </div>
                   </div>
 
+                  {/* Job Table */}
                   <Table
                     dataSource={filteredJobs}
                     columns={columns}
@@ -650,22 +838,22 @@ const JobList = () => {
               )}
             </div>
           </div>
-          {/* /Jobs List */}
+          {/* /Job List */}
         </div>
+
+        {/* Footer */}
+        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
+          <p className="mb-0">2014 - 2025 © AmasQIS.</p>
+          <p className="mb-0">
+            Designed &amp; Developed By{" "}
+            <Link to="#" className="text-primary">
+              AmasQIS
+            </Link>
+          </p>
+        </div>
+        {/* /Footer */}
       </div>
       {/* /Page Wrapper */}
-
-      {/* Footer */}
-      <div className="footer d-sm-flex align-items-center justify-content-between">
-        <p>2014 - 2025 © Amasqis.</p>
-        <p>
-          Designed &amp; Developed By{" "}
-          <Link to="#" className="text-primary">
-            Amasqis
-          </Link>
-        </p>
-      </div>
-      {/* /Footer */}
 
       {/* Modal Components */}
       <AddJob />

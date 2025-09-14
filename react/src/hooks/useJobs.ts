@@ -8,10 +8,10 @@ export interface Job {
   title: string;
   category: string;
   type: string;
-  description?: string;
-  requirements?: string;
-  skills?: string[];
-  tags?: string[];
+  description: string;
+  requirements: string;
+  skills: string[];
+  tags: string[];
   location: {
     country: string;
     state: string;
@@ -24,10 +24,11 @@ export interface Job {
   };
   numberOfPositions: number;
   status: 'Active' | 'Inactive';
-  appliedCount?: number;
+  appliedCount: number;
   companyId: string;
   createdAt: string;
   updatedAt: string;
+  isDeleted?: boolean;
 }
 
 export interface JobStats {
@@ -35,8 +36,14 @@ export interface JobStats {
   activeJobs: number;
   inactiveJobs: number;
   newJobs: number;
-  byCategory: Array<{ _id: string; count: number }>;
-  byType: Array<{ _id: string; count: number }>;
+  byCategory: Array<{
+    _id: string;
+    count: number;
+  }>;
+  byType: Array<{
+    _id: string;
+    count: number;
+  }>;
 }
 
 export interface JobFilters {
@@ -73,7 +80,7 @@ export const useJobs = () => {
     setLoading(true);
     setError(null);
     console.log('[useJobs] Fetching all job data with filters:', filters);
-    socket.emit('job:getAll', filters);
+    socket.emit('job:getAllData', filters);
   }, [socket]);
 
   // Create job
@@ -194,20 +201,39 @@ export const useJobs = () => {
     });
   }, [socket]);
 
-  // Fetch job stats
-  const fetchStats = useCallback(() => {
-    if (!socket) {
-      console.warn('[useJobs] Socket not available for stats');
-      return;
-    }
+  // Filter jobs
+  const filterJobs = useCallback((filters: JobFilters) => {
+    console.log('[useJobs] Filtering jobs with:', filters);
+    fetchAllData(filters);
+  }, [fetchAllData]);
 
-    console.log('[useJobs] Fetching job stats');
-    socket.emit('job:getStats');
-  }, [socket]);
+  // Search jobs
+  const searchJobs = useCallback((searchQuery: string) => {
+    console.log('[useJobs] Searching jobs with:', searchQuery);
+    const filters: JobFilters = { search: searchQuery };
+    fetchAllData(filters);
+  }, [fetchAllData]);
 
   // Set up socket listeners
   useEffect(() => {
     if (!socket) return;
+
+    const handleGetAllDataResponse = (response: any) => {
+      console.log('[useJobs] getAllData response received:', response);
+      setLoading(false);
+      if (response.done) {
+        console.log('[useJobs] Jobs data received:', response.data.jobs);
+        console.log('[useJobs] Stats data received:', response.data.stats);
+        setJobs(response.data.jobs || []);
+        setStats(response.data.stats || {});
+        setError(null);
+      } else {
+        console.error('[useJobs] Failed to get jobs data:', response.error);
+        setError(response.error);
+        setJobs([]);
+        setStats(null);
+      }
+    };
 
     const handleGetAllResponse = (response: any) => {
       console.log('[useJobs] getAll response received:', response);
@@ -217,7 +243,7 @@ export const useJobs = () => {
         setJobs(response.data || []);
         setError(null);
       } else {
-        console.error('[useJobs] Failed to get jobs data:', response.error);
+        console.error('[useJobs] Failed to get jobs:', response.error);
         setError(response.error);
         setJobs([]);
       }
@@ -238,7 +264,6 @@ export const useJobs = () => {
       if (response.done && response.data) {
         console.log('[useJobs] Job created via broadcast:', response.data);
         fetchAllData();
-        fetchStats();
       }
     };
 
@@ -246,7 +271,6 @@ export const useJobs = () => {
       if (response.done && response.data) {
         console.log('[useJobs] Job updated via broadcast:', response.data);
         fetchAllData();
-        fetchStats();
       }
     };
 
@@ -254,10 +278,10 @@ export const useJobs = () => {
       if (response.done && response.data) {
         console.log('[useJobs] Job deleted via broadcast:', response.data);
         fetchAllData();
-        fetchStats();
       }
     };
 
+    socket.on('job:getAllData-response', handleGetAllDataResponse);
     socket.on('job:getAll-response', handleGetAllResponse);
     socket.on('job:getStats-response', handleGetStatsResponse);
     socket.on('job:job-created', handleJobCreated);
@@ -265,13 +289,14 @@ export const useJobs = () => {
     socket.on('job:job-deleted', handleJobDeleted);
 
     return () => {
+      socket.off('job:getAllData-response', handleGetAllDataResponse);
       socket.off('job:getAll-response', handleGetAllResponse);
       socket.off('job:getStats-response', handleGetStatsResponse);
       socket.off('job:job-created', handleJobCreated);
       socket.off('job:job-updated', handleJobUpdated);
       socket.off('job:job-deleted', handleJobDeleted);
     };
-  }, [socket, fetchAllData, fetchStats]);
+  }, [socket, fetchAllData]);
 
   // Export jobs as PDF
   const exportPDF = useCallback(async () => {
@@ -350,18 +375,26 @@ export const useJobs = () => {
   }, [socket]);
 
   return {
+    // Data
     jobs,
     stats,
     loading,
     error,
     exporting,
+    
+    // Core operations
     fetchAllData,
-    fetchStats,
     createJob,
     updateJob,
     deleteJob,
     getJobById,
+    
+    // Filtering and search
+    filterJobs,
+    searchJobs,
+    
+    // Export functionality
     exportPDF,
-    exportExcel
+    exportExcel,
   };
 };

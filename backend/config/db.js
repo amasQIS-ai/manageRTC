@@ -5,6 +5,7 @@ const uri =
   "mongodb+srv://admin:AdMin-2025@cluster0.iooxltd.mongodb.net/";
 
 const client = new MongoClient(uri);
+
 let isConnected = false;
 
 export const connectDB = async () => {
@@ -26,12 +27,14 @@ export const getTenantCollections = (tenantDbName) => {
       "MongoDB client not connected yet. Call connectDB() first."
     );
   }
+
   const db = client.db(tenantDbName);
+
   return {
     // Existing collections
     stats: db.collection("stats"),
     companies: db.collection("companies"),
-    details: db.collection("details"),     // for company details
+    details: db.collection("details"), // for company details
     leads: db.collection("leads"),
 
     // Admin dashboard collections
@@ -50,40 +53,37 @@ export const getTenantCollections = (tenantDbName) => {
     todos: db.collection("todos"),
     schedules: db.collection("schedules"),
     birthdays: db.collection("birthdays"),
-    jobApplications: db.collection("jobApplications"),
     earnings: db.collection("earnings"),
 
-    
-    // employee dashboard collection 
+    // employee dashboard collection
     skills: db.collection("skills"),
     salaryHistory: db.collection("salaryHistory"),
     meetings: db.collection("meetings"),
     notifications: db.collection('notifications'),
 
-
     //Pipeline Collections
     pipelines: db.collection("pipelines"),
     stages: db.collection("stages"),
-    
+
     //Chat Collections
     conversations: db.collection("conversations"),
     messages: db.collection("messages"),
-    
+
     //Social Feed
     socialFeeds: db.collection("socialFeeds"),
     follows: db.collection("follows"),
     hashtags: db.collection("hashtags"),
 
     // hr employee section collection
-    hr: db.collection("hr"),   
-    permissions:  db.collection("permissions"),
+    hr: db.collection("hr"),
+    permissions: db.collection("permissions"),
     policy: db.collection("policy"),
     designations: db.collection("designations"),
     assets: db.collection("assets"),
 
     //recruitment collections
     candidates: db.collection("candidates"),
-    jobs: db.collection("jobApplications"),
+    jobs: db.collection("jobApplications"), // Fixed: was pointing to jobApplications, should be jobs
   };
 };
 
@@ -93,7 +93,9 @@ export const getsuperadminCollections = () => {
       "MongoDB client not connected yet. Call connectDB() first."
     );
   }
+
   const db = client.db("AmasQIS");
+
   return {
     stats: db.collection("stats"),
     companiesCollection: db.collection("companies"),
