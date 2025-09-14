@@ -8,9 +8,9 @@ import PredefinedDateRanges from "../../../core/common/datePicker";
 import ImageWithBasePath from "../../../core/common/imageWithBasePath";
 import { DatePicker } from "antd";
 import CommonSelect from "../../../core/common/commonSelect";
-import AddJob from "../jobs/add_job";
-import EditJob from "../jobs/edit_job";
-import DeleteJob from "../jobs/delete_job";
+import AddJob from "./add_job";
+import EditJob from "./edit_job";
+import DeleteJob from "./delete_job";
 import { message } from "antd";
 
 interface Job {
@@ -222,7 +222,7 @@ const JobList = () => {
       title: "Job ID",
       dataIndex: "_id",
       render: (text: string, record: Job) => (
-        <Link to={all_routes.jobdetails} className="link-default">
+        <Link to={all_routes.jobdetails.replace(':jobId', record._id)} className="link-default">
           {record._id.slice(-8).toUpperCase()}
         </Link>
       ),
@@ -235,7 +235,7 @@ const JobList = () => {
         <div className="d-flex align-items-center">
           <div className="ms-2">
             <h6 className="fw-medium">
-              <Link to={all_routes.jobdetails}>{record.title}</Link>
+              <Link to={all_routes.jobdetails.replace(':jobId', record._id)}>{record.title}</Link>
             </h6>
             <span className="fs-12 fw-normal text-gray">{record.category}</span>
           </div>

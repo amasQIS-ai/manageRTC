@@ -716,7 +716,7 @@ const JobGrid = () => {
                               </div>
                               <div>
                                 <h6 className="fw-medium mb-1">
-                                  <Link to={all_routes.jobdetails}>{job.title}</Link>
+                                  <Link to={all_routes.jobdetails.replace(':jobId', job._id)}>{job.title}</Link>
                                 </h6>
                                 <span
                                   className={`badge ${
