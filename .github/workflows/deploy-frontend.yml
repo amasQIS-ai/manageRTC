@@ -45,7 +45,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.VPS_PASS }}
           script: |
             set -euxo pipefail
             mkdir -p /srv/hrms/frontend/releases/${{ github.sha }}/build
@@ -76,7 +76,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.VPS_PASS }}
           script: |
             set -euxo pipefail
             rel="/srv/hrms/frontend/releases/${{ github.sha }}"
