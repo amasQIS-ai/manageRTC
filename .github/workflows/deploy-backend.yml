@@ -57,7 +57,7 @@ jobs:
             fi
             # Do not overwrite .env – it lives on the server already.
             if pm2 list | grep -q hrms-api; then
-              pm2 reload hrms-api
+              pm2 restart hrms-api
             else
               pm2 start "node server.js" --name hrms-api --cwd ${{ env.BACKEND_DIR }}
             fi
