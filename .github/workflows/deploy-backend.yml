@@ -46,7 +46,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.VPS_PASS }}
           script: |
             set -euxo pipefail
             cd ${{ env.BACKEND_DIR }}
