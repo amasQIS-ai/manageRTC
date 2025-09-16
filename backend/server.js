@@ -26,17 +26,22 @@ const httpServer = createServer(app);
 app.use(cors());
 app.use(express.json());
 
+console.log("[Deployment]: TEST TEST");
+
 // Serve static files from the temp directory
 app.use(
   "/temp",
   express.static(path.join(__dirname, "temp"), {
     setHeaders: (res, path) => {
       // Set appropriate headers based on file type
-      if (path.endsWith('.pdf')) {
+      if (path.endsWith(".pdf")) {
         res.set("Content-Type", "application/pdf");
         res.set("Content-Disposition", "attachment");
-      } else if (path.endsWith('.xlsx')) {
-        res.set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      } else if (path.endsWith(".xlsx")) {
+        res.set(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
         res.set("Content-Disposition", "attachment");
       }
       // Security headers
