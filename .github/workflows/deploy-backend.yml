@@ -25,7 +25,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.VPS_PASS }}
           script: |
             set -euxo pipefail
             mkdir -p ${{ env.BACKEND_DIR }}
@@ -36,7 +36,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.VPS_PASS }}
           source: "backend/*"
           target: "${{ env.BACKEND_DIR }}/"
 
