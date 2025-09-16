@@ -41,19 +41,18 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # in the SSH step script
             set -e
-            # unpack to a temp area
             mkdir -p ~/releases/backend && rm -rf ~/releases/backend/*
             tar -xzf ~/backend.tar.gz -C ~/releases/backend
             rm -f ~/backend.tar.gz
 
-            # sync to app dir
-            sudo mkdir -p /srv/devmanagertc/backend
+            # no sudo needed; deploy owns /srv/devmanagertc
+            mkdir -p /srv/devmanagertc/backend
             rsync -a --delete ~/releases/backend/ /srv/devmanagertc/backend/
 
             cd /srv/devmanagertc/backend
 
-            # write .env (server-managed via secrets)
             cat > .env << 'EOF'
             PORT=${{ secrets.ENV_PORT }}
             MONGO_URI=${{ secrets.ENV_MONGO_URI }}
@@ -65,14 +64,12 @@ jobs:
             NODE_ENV=production
             EOF
 
-            # install prod deps
             npm ci --omit=dev
 
-            # start or reload pm2
             if pm2 describe managertc-api > /dev/null; then
               pm2 reload managertc-api
             else
               pm2 start server.js --name managertc-api
               pm2 save
-              pm2 startup systemd -u $USER --hp $HOME | sed -n 's/^.*\(sudo .*systemctl .*pm2.*\)$/\1/p' | bash
             fi
+
