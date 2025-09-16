@@ -112,7 +112,9 @@ const initializeServer = async () => {
     const PORT = process.env.PORT || 5000;
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log("[Deployment]: Praveen Push");
+      // console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`Environment: Development`);
     });
   } catch (error) {
     console.error("Failed to initialize server:", error);

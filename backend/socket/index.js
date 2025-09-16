@@ -5,9 +5,10 @@ import { clerkClient, verifyToken } from "@clerk/express";
 dotenv.config();
 
 // Rate limiting configuration (disabled in development)
-const isDevelopment =
-  process.env.NODE_ENV === "development" ||
-  process.env.NODE_ENV !== "production";
+// const isDevelopment =
+//   process.env.NODE_ENV === "development" ||
+//   process.env.NODE_ENV !== "production";
+const isDevelopment = true;
 a = true;
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
