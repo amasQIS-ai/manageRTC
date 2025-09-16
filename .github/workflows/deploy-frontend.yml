@@ -45,7 +45,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "react/build/*"
+          source: "react/build/**"
           target: "/home/${{ secrets.VPS_USER }}/frontend_release/"
           strip_components: 1
 
@@ -59,8 +59,7 @@ jobs:
             set -e
             mkdir -p /srv/devmanagertc/frontend
             rm -rf /srv/devmanagertc/frontend/*
-            cp -r ~/frontend_release/* /srv/devmanagertc/frontend/
-            # (optional) if you want nginx to own files, keep next line; allowed by sudoers above
-            # sudo chown -R www-data:www-data /srv/devmanagertc/frontend
+            cp -r ~/frontend_release/build/* /srv/devmanagertc/frontend/
             find /srv/devmanagertc/frontend -type f -name "*.map" -delete
             sudo systemctl reload nginx
+
