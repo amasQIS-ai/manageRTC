@@ -38,7 +38,7 @@ jobs:
           npm ci
           npm run build
 
-      # 5) Make sure remote release dir exists
+      # 5) Make sure remote release dir exists (via SSH password)
       - name: Ensure release dir on server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -50,26 +50,18 @@ jobs:
             set -euxo pipefail
             mkdir -p /srv/hrms/frontend/releases/${{ github.sha }}/build
 
-      # 6) Setup SSH key on runner for rsync
-      - name: Setup SSH for rsync
+      # 6) Upload build/ using rsync + password
+      - name: Rsync build to server with password
         run: |
           set -euxo pipefail
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          # trust the host (optional: remove -o StrictHostKeyChecking=no and use ssh-keyscan instead)
-          ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-
-      # 7) Upload build/ using native rsync (no 3rd-party action)
-      - name: Rsync build to server
-        run: |
-          set -euxo pipefail
-          rsync -avz \
-            -e "ssh -p ${{ secrets.VPS_PORT }} -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+          sudo apt-get update && sudo apt-get install -y sshpass
+          sshpass -p "${{ secrets.VPS_PASS }}" \
+            rsync -avz \
+            -e "ssh -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no" \
             ./react/build/ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/srv/hrms/frontend/releases/${{ github.sha }}/build/
 
-      # 8) Switch symlink and reload nginx
+      # 7) Switch symlink and reload nginx (via SSH password)
       - name: Switch symlink & reload nginx
         uses: appleboy/ssh-action@v1.0.3
         with:
