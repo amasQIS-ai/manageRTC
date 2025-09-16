@@ -33,6 +33,8 @@ jobs:
           EOF
 
       - name: Install & build
+        env:
+          CI: false
         run: |
           npm ci
           npm run build
