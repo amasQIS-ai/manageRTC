@@ -9,7 +9,7 @@ dotenv.config();
 //   process.env.NODE_ENV === "development" ||
 //   process.env.NODE_ENV !== "production";
 const isDevelopment = true;
-a = true;
+
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per minute per user
