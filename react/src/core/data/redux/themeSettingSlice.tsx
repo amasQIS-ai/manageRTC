@@ -10,11 +10,11 @@ const initialState = {
   dataTopBarColorAll: localStorage.getItem("dataTopBarColorAll") || "",
   dataColorAll: localStorage.getItem("dataColorAll") || "",
   dataTheme: localStorage.getItem("dataTheme") || "light",
-  dataTopBar: localStorage.getItem("dataTopBar") || "bluegradient",
+  dataTopBar: localStorage.getItem("dataTopBar") || "purplegradient",
   dataTopBarColor: localStorage.getItem("dataTopBarolor") || "white",
   dataSidebarBg: localStorage.getItem("dataSidebarBg") || "",
   dataTopbarBg: localStorage.getItem("dataTopbarBg") || "",
-  dataColor: localStorage.getItem("dataColor") || "brightblue",
+  dataColor: localStorage.getItem("dataColor") || "indigo",
   dataLoader: localStorage.getItem("dataLoader") || "enable",
   isRtl: localStorage.getItem("rtl") || false,
   headerCollapse: false,
@@ -108,13 +108,13 @@ const themeSettingSlice = createSlice({
       state.dataLayout = "default";
       state.dataWidth = "fluid";
       state.dataCard = "bordered";
-      state.dataSidebar = "light";
+      state.dataSidebar = "indigo";
       state.dataTheme = "light";
-      state.dataTopBar = "white";
+      state.dataTopBar = "purplegradient";
       state.dataTopBarColor = "white";
       state.dataSidebarBg = "";
       state.dataTopbarBg = "";
-      state.dataColor = "primary";
+      state.dataColor = "indigo";
       state.dataLoader = "enable";
       state.isRtl=""
       localStorage.setItem("dataLayout", "default");
@@ -122,11 +122,11 @@ const themeSettingSlice = createSlice({
       localStorage.setItem("dataCard", "bordered");
       localStorage.setItem("dataSidebar", "indigo");
       localStorage.setItem("dataTheme", "light");
-      localStorage.setItem("dataTopBar", "bluegradient");
+      localStorage.setItem("dataTopBar", "purplegradient");
       localStorage.setItem("dataTopBarColor", "white");
       localStorage.setItem("dataSidebarBg", "");
       localStorage.setItem("dataTopbarBg", "");
-      localStorage.setItem("dataColor", "brightblue");
+      localStorage.setItem("dataColor", "indigo");
       localStorage.setItem("dataLoader", "enable");
       localStorage.setItem("rtl", "");
     },
