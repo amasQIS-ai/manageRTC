@@ -105,5 +105,7 @@ export const getsuperadminCollections = () => {
     packagesCollection: db.collection("packages"),
     subscriptionsCollection: db.collection("subscriptions"),
     trainingtypes: db.collection("trainingtypes"),
+    trainers: db.collection("trainers"),
+    trainings: db.collection("trainings"),
   };
 };
