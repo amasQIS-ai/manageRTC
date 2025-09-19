@@ -14,7 +14,6 @@ import userSocketController from "../controllers/user/user.socket.controller.js"
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import employeeController from "../controllers/employee/employee.controller.js";
 import notesController from "../controllers/employee/notes.controller.js";
-import jobController from "../controllers/jobs/jobs.controllers.js";
 import candidateController from "../controllers/candidates/candidates.controllers.js";
 import jobsController from "../controllers/jobs/jobs.controllers.js";
 const router = (socket, io, role) => {
@@ -68,7 +67,7 @@ const router = (socket, io, role) => {
       notesController(socket, io);
 
       console.log("Attaching jobs controller for admin...");
-      jobController(socket, io);
+      jobsController(socket, io);
 
       console.log("Attaching candidate controller for admin...");
       candidateController(socket, io);
@@ -93,9 +92,10 @@ const router = (socket, io, role) => {
       notesController(socket, io);
 
       console.log("Attaching job controller for hr...");
-      jobController(socket, io);
+      jobsController(socket, io);
 
       console.log("Attaching candidates controller for hr...");
+      candidateController(socket, io);
       break;
     case "leads":
       console.log("Attaching leads controller...");
