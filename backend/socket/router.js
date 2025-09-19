@@ -1,19 +1,22 @@
 import superAdminController from "../controllers/superadmin/superadmin.controller.js";
 import adminController from "../controllers/admin/admin.controller.js";
+import hrDashboardController from "../controllers/hr/hr.controller.js";
+import invoiceSocketController from "../controllers/invoice/invoice.socket.controller.js";
 import leadController from "../controllers/lead/lead.controller.js";
 import pipelineController from "../controllers/pipeline/pipeline.controllers.js";
-import hrDashboardController from "../controllers/hr/hr.controller.js";
 import clientController from "../controllers/client/client.controllers.js";
 import activityController from "../controllers/activities/activities.controllers.js";
+import dealController from "../controllers/deal/deal.controller.js";
 import { ChatController } from "../controllers/chat/chat.controller.js";
 import { ChatUsersController } from "../controllers/chat/users.controller.js";
 
 import userSocketController from "../controllers/user/user.socket.controller.js";
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
-import candidateController from "../controllers/candidates/candidates.controllers.js";
-import jobController from "../controllers/jobs/jobs.controllers.js";
 import employeeController from "../controllers/employee/employee.controller.js";
-
+import notesController from "../controllers/employee/notes.controller.js";
+import jobController from "../controllers/jobs/jobs.controllers.js";
+import candidateController from "../controllers/candidates/candidates.controllers.js";
+import jobsController from "../controllers/jobs/jobs.controllers.js";
 const router = (socket, io, role) => {
   console.log(`Setting up socket router for role: ${role}`);
   console.log(`Socket data:`, {
@@ -46,28 +49,34 @@ const router = (socket, io, role) => {
       hrDashboardController(socket, io);
       console.log("Attaching admin controller...");
       adminController(socket, io);
+      invoiceSocketController(socket, io);
       console.log("Attaching lead controller for admin...");
       leadController(socket, io);
       console.log("Attaching client controller for admin...");
       clientController(socket, io);
       console.log("Attaching activity controller for admin...");
       activityController(socket, io);
+      console.log("Attaching deal controller for admin...");
+      dealController(socket, io);
+      console.log("Attaching deal controller for deals...");
       userSocketController(socket, io);
       console.log("Attaching social feed controller for admin...");
       socialFeedSocketController(socket, io);
       // Pipelines JS
       pipelineController(socket, io);
-      console.log("Attaching pipeline controller for admin...");
-      
+      console.log("Attaching admin notes controller...");
+      notesController(socket, io);
+
+      console.log("Attaching jobs controller for admin...");
+      jobController(socket, io);
+
       console.log("Attaching candidate controller for admin...");
       candidateController(socket, io);
-
-      console.log("Attaching job controller for admin...");
-      jobController(socket, io);
       break;
 
     case "hr":
       console.log("Attaching HR controller...");
+      invoiceSocketController(socket, io);
       hrDashboardController(socket, io);
       console.log("Attaching lead controller for hr...");
       leadController(socket, io);
@@ -75,15 +84,18 @@ const router = (socket, io, role) => {
       clientController(socket, io);
       console.log("Attaching activity controller for hr...");
       activityController(socket, io);
+      console.log("Attaching deal controller for hr...");
+      dealController(socket, io);
       userSocketController(socket, io);
       console.log("Attaching social feed controller for hr...");
       socialFeedSocketController(socket, io);
-      console.log("Attaching pipeline controller for hr...");
-      pipelineController(socket, io);
-      console.log("Attaching candidate controller for hr...");
-      candidateController(socket, io);
+      console.log("Attaching hr notes controller...");
+      notesController(socket, io);
+
       console.log("Attaching job controller for hr...");
       jobController(socket, io);
+
+      console.log("Attaching candidates controller for hr...");
       break;
     case "leads":
       console.log("Attaching leads controller...");
@@ -91,10 +103,12 @@ const router = (socket, io, role) => {
       userSocketController(socket, io);
       console.log("Attaching social feed controller for leads...");
       socialFeedSocketController(socket, io);
+      console.log("Attaching deal controller for leads...");
+      dealController(socket, io);
       break;
     case "employee":
-       console.log("Attaching Employee controller...");
-       employeeController(socket, io);
+      console.log("Attaching Employee controller...");
+      employeeController(socket, io);
 
       break;
     default:
