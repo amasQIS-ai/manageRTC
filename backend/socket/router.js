@@ -14,8 +14,10 @@ import userSocketController from "../controllers/user/user.socket.controller.js"
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import employeeController from "../controllers/employee/employee.controller.js";
 import notesController from "../controllers/employee/notes.controller.js";
-import candidateController from "../controllers/candidates/candidates.controllers.js";
+
 import jobsController from "../controllers/jobs/jobs.controllers.js";
+import candidateController from "../controllers/candidates/candidates.controllers.js";
+
 const router = (socket, io, role) => {
   console.log(`Setting up socket router for role: ${role}`);
   console.log(`Socket data:`, {
@@ -66,11 +68,11 @@ const router = (socket, io, role) => {
       console.log("Attaching admin notes controller...");
       notesController(socket, io);
 
-      console.log("Attaching jobs controller for admin...");
-      jobsController(socket, io);
-
       console.log("Attaching candidate controller for admin...");
-      candidateController(socket, io);
+      candidateController(socket , io);
+
+      console.log("Attaching jobsController for admin...");
+      jobsController(socket, io);
       break;
 
     case "hr":
@@ -91,10 +93,10 @@ const router = (socket, io, role) => {
       console.log("Attaching hr notes controller...");
       notesController(socket, io);
 
-      console.log("Attaching job controller for hr...");
+      console.log("Attaching jobs controller for hr...");
       jobsController(socket, io);
 
-      console.log("Attaching candidates controller for hr...");
+      console.log("Attaching candidate controller for hr...");
       candidateController(socket, io);
       break;
     case "leads":

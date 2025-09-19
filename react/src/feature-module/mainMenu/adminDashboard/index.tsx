@@ -16,7 +16,7 @@ import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
-
+import Footer from "../../../core/common/footer";
 interface DashboardData {
   pendingItems?: {
     approvals: number;
@@ -312,6 +312,7 @@ const AdminDashboard = () => {
 
         if (response.done) {
           console.log("Dashboard data loaded successfully");
+          console.log(response.data);
           setDashboardData(response.data);
           setLoading(false);
         } else {
@@ -3979,36 +3980,35 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 
-      <ProjectModals onProjectCreated={() => {
-        if (socket) {
-          const currentYear = date.getFullYear();
-          socket.emit("admin/dashboard/get-all-data", { year: currentYear });
-        }
-      }} />
-      <RequestModals onLeaveRequestCreated={() => {
-        if (socket) {
-          const currentYear = date.getFullYear();
-          socket.emit("admin/dashboard/get-all-data", { year: currentYear });
-        }
-      }} mode = "admin" />
-      <TodoModal onTodoAdded={() => {
-        if (socket) {
-          const currentYear = date.getFullYear();
-          socket.emit("admin/dashboard/get-all-data", { year: currentYear });
-        }
-      }} />
+      <ProjectModals
+        onProjectCreated={() => {
+          if (socket) {
+            const currentYear = date.getFullYear();
+            socket.emit("admin/dashboard/get-all-data", { year: currentYear });
+          }
+        }}
+      />
+      <RequestModals
+        onLeaveRequestCreated={() => {
+          if (socket) {
+            const currentYear = date.getFullYear();
+            socket.emit("admin/dashboard/get-all-data", { year: currentYear });
+          }
+        }}
+        mode="admin"
+      />
+      <TodoModal
+        onTodoAdded={() => {
+          if (socket) {
+            const currentYear = date.getFullYear();
+            socket.emit("admin/dashboard/get-all-data", { year: currentYear });
+          }
+        }}
+      />
     </>
   );
 };

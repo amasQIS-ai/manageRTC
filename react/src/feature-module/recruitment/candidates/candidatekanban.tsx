@@ -21,6 +21,7 @@ const STATUS_COLUMNS = [
   { key: "Hired", title: "Hired", color: "success" },
   { key: "Rejected", title: "Rejected", color: "danger" }
 ];
+import Footer from "../../../core/common/footer";
 
 const CandidateKanban = () => {
   const socket = useSocket() as Socket | null;

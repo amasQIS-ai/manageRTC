@@ -21,6 +21,7 @@ import { DateTime } from "luxon";
 import { current } from "immer";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
+import Footer from "../../../core/common/footer";
 
 interface DashboardData {
   employeeDetails?: {
@@ -2802,15 +2803,7 @@ const EmployeeDashboard = () => {
             </div>
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div >
       <RequestModals
         onLeaveRequestCreated={() => {

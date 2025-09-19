@@ -9,6 +9,7 @@ import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
 import { toast, ToastContainer } from "react-toastify";
 import dayjs from "dayjs";
+import Footer from "../../../core/common/footer";
 
 type PasswordField = "password" | "confirmPassword";
 type PermissionAction = "read" | "write" | "create" | "delete" | "import" | "export";
@@ -1233,15 +1234,7 @@ const EmployeesGrid = () => {
           </div>
           {/* /Clients Grid */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © SmartHR.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="#" className="text-primary">
-              Dreams
-            </Link>
-          </p>
-        </div>
+        <Footer/>
       </div>
       {/* /Page Wrapper */}
       {/* Add Employee */}

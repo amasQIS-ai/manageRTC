@@ -10,6 +10,7 @@ import AddCandidate from "./add_candidate";
 import EditCandidate from "./edit_candidate";
 import DeleteCandidate from "./delete_candidate";
 import { message } from "antd";
+import Footer from "../../../core/common/footer";
 
 const CandidateGrid = () => {
   const socket = useSocket() as Socket | null;

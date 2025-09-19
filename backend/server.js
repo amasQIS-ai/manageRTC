@@ -10,6 +10,9 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import socialFeedRoutes from "./routes/socialfeed.routes.js";
+import dealRoutes from "./routes/deal.routes.js";
+import companiesRoutes from "./routes/companies.routes.js";
+import contactRoutes from "./routes/contacts.routes.js";
 
 config();
 
@@ -23,13 +26,28 @@ const httpServer = createServer(app);
 app.use(cors());
 app.use(express.json());
 
+console.log("[Deployment]: TEST TEST");
+
 // Serve static files from the temp directory
 app.use(
   "/temp",
   express.static(path.join(__dirname, "temp"), {
     setHeaders: (res, path) => {
-      res.set("Content-Type", "application/pdf");
-      res.set("Content-Disposition", "attachment");
+      // Set appropriate headers based on file type
+      if (path.endsWith(".pdf")) {
+        res.set("Content-Type", "application/pdf");
+        res.set("Content-Disposition", "attachment");
+      } else if (path.endsWith(".xlsx")) {
+        res.set(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.set("Content-Disposition", "attachment");
+      }
+      // Security headers
+      res.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
     },
   })
 );
@@ -48,6 +66,9 @@ const initializeServer = async () => {
 
     // Routes
     app.use("/api/socialfeed", socialFeedRoutes);
+    app.use("/api/deals", dealRoutes);
+    app.use("/api/companies", companiesRoutes);
+    app.use("/api/contacts", contactRoutes);
 
     app.get("/", (req, res) => {
       res.send("API is running");
@@ -91,7 +112,9 @@ const initializeServer = async () => {
     const PORT = process.env.PORT || 5000;
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log("[Deployment]: Praveen Push");
+      // console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`Environment: Development`);
     });
   } catch (error) {
     console.error("Failed to initialize server:", error);

@@ -10,6 +10,7 @@ import CommonTextEditor from "../../../core/common/textEditor";
 import dragula, { Drake } from "dragula";
 import "dragula/dist/dragula.css";
 import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
+import Footer from "../../../core/common/footer";
 
 const TaskBoard = () => {
   const getModalContainer = () => {
@@ -8270,15 +8271,7 @@ const TaskBoard = () => {
             </div>
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 
