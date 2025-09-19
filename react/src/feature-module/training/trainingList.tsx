@@ -456,7 +456,7 @@ const TrainingList = () => {
 
     const trainingEmployeeOptions: OptionEmployee[] = (rowsEmployee as any[]).map((t: any) => ({
       value: t.employeeId,
-      label: t.firstName+" "+t.lastName,
+      label: t.firstName+" "+t.lastName+ " - "+t.employeeId,
     }));
 
 
