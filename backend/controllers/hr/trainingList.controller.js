@@ -27,6 +27,15 @@ const trainingListController = (socket, io) => {
     }
   });
 
+  socket.on("hr/trainingList/get-employeeDetails", async () => {
+    try {
+      const res = await trainingListService.getEmployeeDetails(socket.companyId);
+      socket.emit("hr/trainingList/get-employeeDetails-response", res);
+    } catch (error) {
+      socket.emit("hr/trainingList/get-employeeDetails-response", toErr(error));
+    }
+  });
+
   socket.on("hr/trainingList/get-trainingList", async (trainingId) => {
     try {
       const res = await trainingListService.getSpecificTrainingList(trainingId);
