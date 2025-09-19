@@ -29,6 +29,8 @@ type TrainingRow = {
 type Stats = {
   totalTrainingList: string;
 };
+import TrainingListModal from "../../core/modals/trainingListModal";
+import Footer from "../../core/common/footer";
 
 const TrainingList = () => {
 
@@ -543,6 +545,7 @@ const TrainingList = () => {
             </Link>
           </p>
         </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
       {/* Add Training */}

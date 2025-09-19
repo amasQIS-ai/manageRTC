@@ -7,6 +7,8 @@ import dragula, { Drake } from "dragula";
 import "dragula/dist/dragula.css";
 import CrmsModal from "../../../core/modals/crms_modal";
 import { useDeals, Deal } from "../../../hooks/useDeals";
+import Footer from "../../../core/common/footer";
+
 const DealsGrid = () => {
   const routes = all_routes;
   const { deals, fetchDeals, updateDeal, deleteDeal } = useDeals();
@@ -664,15 +666,7 @@ const DealsGrid = () => {
           </div>
           {/* /Deals Grid */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       <CrmsModal 
         selectedDeal={selectedDeal}

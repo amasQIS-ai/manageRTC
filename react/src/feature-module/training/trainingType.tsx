@@ -21,6 +21,7 @@ type TrainingTypesRow = {
 type Stats = {
   totalTrainingTypes: string;
 };
+import Footer from "../../core/common/footer";
 
 const TrainingType = () => {
   const socket = useSocket() as Socket | null;
@@ -418,6 +419,7 @@ const TrainingType = () => {
             </Link>
           </p>
         </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 

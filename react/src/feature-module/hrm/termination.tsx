@@ -12,6 +12,7 @@ import { format, parse } from "date-fns";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
 import dayjs from "dayjs";
+import Footer from "../../core/common/footer";
 
 type TerminationRow = {
   employeeName: string;
@@ -582,15 +583,7 @@ const Termination = () => {
           </div>
 
           {/* Footer */}
-          <div className="footer d-sm-flex align-items-center justify-content-between">
-            <p>2014 - 2025 © Amasqis.</p>
-            <p>
-              Designed &amp; Developed By{" "}
-              <Link to="#" target="_blank">
-                Amasqis
-              </Link>
-            </p>
-          </div>
+          <Footer/>
         </div>
         {/* Add Termination */}
         <div className="modal fade" id="new_termination">
