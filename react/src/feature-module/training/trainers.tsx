@@ -22,9 +22,6 @@ type TrainersRow = {
 type Stats = {
   totalTrainers: string;
 };
-import TrainersModal from "../../core/modals/trainersModal";
-import Footer from "../../core/common/footer";
-
 
 const Trainers = () => {
 
@@ -295,7 +292,7 @@ const Trainers = () => {
           render: (text: string, record: any) => (
             <div className="d-flex align-items-center file-name-icon">
                 <Link to="#" className="avatar avatar-md border avatar-rounded">
-                    <ImageWithBasePath src={`assets/img/users/${record.Image}`} className="img-fluid" alt="img"/>
+                    <ImageWithBasePath src={"assets/img/favicon.png"} className="img-fluid" alt="img"/>
                 </Link>
                 <div className="ms-2">
                     <h6 className="fw-medium">
@@ -443,7 +440,6 @@ const Trainers = () => {
           </div>
           {/* /Performance Indicator list */}
         </div>
-
         <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
           <p className="mb-0">2014 - 2025 © SmartHR.</p>
           <p>
@@ -453,9 +449,6 @@ const Trainers = () => {
             </Link>
           </p>
         </div>
-
-        <Footer />
-
       </div>
       {/* /Page Wrapper */}
       {/* Add Trainer */}

@@ -8,7 +8,7 @@ import CommonSelect from '../../core/common/commonSelect';
 import { useSocket } from "../../SocketContext";
 import { Socket } from "socket.io-client";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Modal } from "antd";
+import { Modal, Select } from "antd";
 import dayjs from "dayjs";
 import { DatePicker } from "antd";
 import { format, parse } from "date-fns";
@@ -16,7 +16,7 @@ import { format, parse } from "date-fns";
 type TrainingRow = {
   trainingType: string;
   trainer: string;
-  employee: string;
+  employee: string [];
   startDate: string;
   endDate: string;
   timeDuration: string;
@@ -26,16 +26,39 @@ type TrainingRow = {
   trainingId: string;
 };
 
+type TrainingTypesRow = {
+  trainingType: string;
+  desc: string;
+  status: string;
+  typeId: string;
+};
+
+type TrainersRow = {
+  trainer: string;
+  phone: string;
+  email: string;
+  desc: string;
+  status: string;
+  trainerId: string;
+};
+
+type EmployeeRow = {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+};
+
 type Stats = {
   totalTrainingList: string;
 };
-import TrainingListModal from "../../core/modals/trainingListModal";
-import Footer from "../../core/common/footer";
 
 const TrainingList = () => {
 
     const socket = useSocket() as Socket | null;
+    const [rowsType, setRowsType] = useState<TrainingTypesRow[]>([]);
     const [rows, setRows] = useState<TrainingRow[]>([]);
+    const [rowsTrainer, setRowsTrainer] = useState<TrainersRow[]>([]);
+    const [rowsEmployee, setRowsEmployee] = useState<EmployeeRow[]>([]);
     const [stats, setStats] = useState<Stats>({ totalTrainingList: "0",});
     const [loading, setLoading] = useState<boolean>(true);
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -46,7 +69,7 @@ const TrainingList = () => {
     const [editForm, setEditForm] = useState({
       trainingType: "",
       trainer: "",
-      employee: "",
+      employee: [],
       startDate: "",
       endDate: "",
       desc: "",
@@ -59,7 +82,7 @@ const TrainingList = () => {
       setEditForm({
           trainingType: row.trainingType || "",
           trainer: row.trainer || "",
-          employee: row.employee || "",
+          employee: row.employee || [],
           startDate: row.startDate || "",
           endDate: row.endDate || "",
           desc: row.desc || "",
@@ -77,7 +100,7 @@ const TrainingList = () => {
     const [addForm, setAddForm] = useState({
       trainingType: "",
       trainer: "",
-      employee: "",
+      employee: [],
       startDate: "",
       endDate: "",
       desc: "",
@@ -136,6 +159,35 @@ const TrainingList = () => {
       setLoading(false);
     }, []);
 
+  const onTypeListResponse = useCallback((res: any) => {
+    if (res?.done) {
+      setRowsType(res.data || []);
+    } else {
+      setRowsType([]);
+      // optionally toast error
+      // toast.error(res?.message || "Failed to fetch trainingTypess");
+    }
+    setLoading(false);
+  }, []);
+
+    const onTrainersListResponse = useCallback((res: any) => {
+      if (res?.done) {
+        setRowsTrainer(res.data || []);
+      } else {
+        setRowsTrainer([]);
+      }
+      setLoading(false);
+    }, []);
+
+    const onEmployeeListResponse = useCallback ((res:any) => {
+      if (res?.done) {
+        setRowsEmployee(res.data || []);
+      } else {
+        setRowsEmployee([]);
+      }
+      setLoading(false);
+    },[]);
+
     const onStatsResponse = useCallback((res: any) => {
       if (res?.done && res.data) {
         setStats(res.data);
@@ -173,6 +225,9 @@ const TrainingList = () => {
       socket.on("hr/trainingList/add-trainingList-response", onAddResponse);
       socket.on("hr/trainingList/update-trainingList-response", onUpdateResponse);
       socket.on("hr/trainingList/delete-trainingList-response", onDeleteResponse);
+      socket.on("hr/trainingTypes/trainingTypeslist-response", onTypeListResponse);
+      socket.on("hr/trainers/trainerslist-response", onTrainersListResponse);
+      socket.on("hr/trainingList/get-employeeDetails-response", onEmployeeListResponse);
 
       return () => {
         socket.off("hr/trainingList/trainingListlist-response", onListResponse);
@@ -180,8 +235,11 @@ const TrainingList = () => {
         socket.off("hr/trainingList/add-trainingList-response", onAddResponse);
         socket.off("hr/trainingList/update-trainingList-response", onUpdateResponse);
         socket.off("hr/trainingList/delete-trainingList-response", onDeleteResponse);
+        socket.off("hr/trainingTypes/trainingTypeslist-response", onTypeListResponse);
+        socket.off("hr/trainers/trainerslist-response", onTrainersListResponse);
+        socket.off("hr/trainingList/get-employeeDetails-response", onEmployeeListResponse);
       };
-    }, [socket, onListResponse, onStatsResponse, onAddResponse, onUpdateResponse, onDeleteResponse]);
+    }, [socket, onListResponse, onStatsResponse, onAddResponse, onUpdateResponse, onDeleteResponse, onTypeListResponse, onTrainersListResponse, onEmployeeListResponse]);
 
     const fetchList = useCallback(
       (type: string, range?: { startDate?: string; endDate?: string }) => {
@@ -193,6 +251,34 @@ const TrainingList = () => {
           payload.endDate = range.endDate;
         }
         socket.emit("hr/trainingList/trainingListlist", payload);
+      },
+      [socket]
+    );
+
+    const fetchTypeList = useCallback(
+      (type: string, range?: { startDate?: string; endDate?: string }) => {
+        if (!socket) return;
+        setLoading(true);
+        const payload= "all time";
+        socket.emit("hr/trainingTypes/trainingTypeslist", payload);
+      },
+      [socket]
+    );
+
+    const fetchTrainersList = useCallback(
+      (type: string, range?: { startDate?: string; endDate?: string }) => {
+        if (!socket) return;
+        setLoading(true);
+        const payload= "all time";
+        socket.emit("hr/trainers/trainerslist", payload);
+      },
+      [socket]
+    );
+
+    const fetchEmployeeList = useCallback(() => {
+        if (!socket) return;
+        setLoading(true);
+        socket.emit("hr/trainingList/get-employeeDetails");
       },
       [socket]
     );
@@ -253,7 +339,7 @@ const TrainingList = () => {
       setAddForm({
         trainingType: "",
         trainer: "",
-        employee: "",
+        employee: [],
         startDate: "",
         endDate: "",
         desc: "",
@@ -297,7 +383,7 @@ const TrainingList = () => {
       setEditForm({
           trainingType: "",
           trainer: "",
-          employee: "",
+          employee: [],
           startDate: "",
           endDate: "",
           desc: "",
@@ -316,8 +402,11 @@ const TrainingList = () => {
     useEffect(() => {
       if (!socket) return;
       fetchList(filterType, customRange);
+      fetchTypeList(filterType, customRange);
+      fetchTrainersList(filterType,customRange);
+      fetchEmployeeList();
       fetchStats();
-    }, [socket, fetchList, fetchStats, filterType, customRange]);
+    }, [socket, fetchList, fetchTypeList, fetchTrainersList, fetchEmployeeList, fetchStats, filterType, customRange]);
 
     type Option = { value: string; label: string };
      
@@ -329,6 +418,36 @@ const TrainingList = () => {
         fetchList(value);
       }
     };
+
+    type OptionTypes = { value: string; label: string };
+
+    const trainingTypeOptions: OptionTypes[] = (rowsType as any[]).map((t: any) => ({
+      value: t.trainingType,
+      label: t.trainingType,
+    }));
+
+    // Helper to find option object from string value
+    const toOption = (val: string | undefined) =>
+      val ? trainingTypeOptions.find(o => o.value === val) : undefined;
+
+    type OptionTrainer = { value: string; label: string };
+
+    const trainingTrainerOptions: OptionTrainer[] = (rowsTrainer as any[]).map((t: any) => ({
+      value: t.trainer,
+      label: t.trainer,
+    }));
+
+    // Helper to find option object from string value
+    const toOptionTrainer = (val: string | undefined) =>
+      val ? trainingTrainerOptions.find(o => o.value === val) : undefined;
+
+    type OptionEmployee = { value: string; label: string };
+
+    const trainingEmployeeOptions: OptionEmployee[] = (rowsEmployee as any[]).map((t: any) => ({
+      value: t.employeeId,
+      label: t.firstName+" "+t.lastName,
+    }));
+
 
     const handleCustomRange = (_: any, dateStrings: [string, string]) => {
       if (dateStrings && dateStrings[0] && dateStrings[1]) {
@@ -349,6 +468,10 @@ const TrainingList = () => {
       setSelectedKeys(keys as string[]);
     };
 
+    const getModalContainerEmp = () =>
+        document.getElementById("new_training") || document.body;
+
+
   const routes = all_routes;
   const columns = [
     {
@@ -363,7 +486,7 @@ const TrainingList = () => {
         <div className="d-flex align-items-center file-name-icon">
           <Link to="#" className="avatar avatar-md border avatar-rounded">
             <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
+              src={"assets/img/favicon.png"}
               className="img-fluid"
               alt="img"
             />
@@ -380,24 +503,28 @@ const TrainingList = () => {
     {
       title: "Employee",
       dataIndex: "employee",
-      render: (text: string, record: any) => (
-        <div className="d-flex align-items-center file-name-icon">
-          <Link to="#" className="avatar avatar-md border avatar-rounded">
-            <ImageWithBasePath
-              src={`assets/img/users/${record.Image}`}
-              className="img-fluid"
-              alt="img"
-            />
-          </Link>
-          <div className="ms-2">
-            <h6 className="fw-medium">
-              <Link to="#">{text}</Link>
-            </h6>
-          </div>
-        </div>
-      ),
-      sorter: (a: TrainingRow, b: TrainingRow) => a.employee.localeCompare(b.employee),
-    },
+      render: (text: string[] | string, record: any) => {
+          const ids = Array.isArray(text) ? text : [];
+          return (
+            <div className="d-flex align-items-center file-name-icon">
+              {ids.map((empId) => (
+                <Link
+                  key={empId}
+                  to="#"
+                  className="avatar avatar-md border avatar-rounded me-1"
+                  title={empId}
+                >
+                  <ImageWithBasePath
+                    src={"assets/img/favicon.png"}
+                    className="img-fluid"
+                    alt="img"
+                  />
+                </Link>
+              ))}
+            </div>
+          );
+        },
+      },
     {
       title: "Time Duration",
       dataIndex: "timeDuration",
@@ -545,7 +672,6 @@ const TrainingList = () => {
             </Link>
           </p>
         </div>
-        <Footer />
       </div>
       {/* /Page Wrapper */}
       {/* Add Training */}
@@ -565,46 +691,56 @@ const TrainingList = () => {
               </div>
               <form>
                 <div className="modal-body pb-0">
-                  <div className="row">
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                  <div className="row g-4">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Training Type
                             </label>
-                            <textarea
-                              className="form-control"
-                              rows={1} value={addForm.trainingType} onChange ={(e) => setAddForm({ ...addForm, trainingType: e.target.value})}
+                            <CommonSelect
+                              className="select"
+                              defaultValue={toOption(addForm.trainingType)} 
+                              onChange={(opt: OptionTypes | null) =>setAddForm({ ...addForm, trainingType: typeof opt === "string" ? opt : (opt?.value ?? "") })}
+                              options={trainingTypeOptions}
                             />
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Trainer
                             </label>
-                            <textarea
-                              className="form-control"
-                              rows={1} value={addForm.trainer} onChange ={(e) => setAddForm({ ...addForm, trainer: e.target.value})}
+                            <CommonSelect
+                              className="select"
+                              defaultValue={toOptionTrainer(addForm.trainer)} 
+                              onChange={(opt: OptionTrainer | null) =>setAddForm({ ...addForm, trainer: typeof opt === "string" ? opt : (opt?.value ?? "") })}
+                              options={trainingTrainerOptions}
                             />
                           </div>
                         </div>
-                      </div>
-
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Employee
                             </label>
-                            <textarea
-                              className="form-control"
-                              rows={1} value={addForm.employee} onChange ={(e) => setAddForm({ ...addForm, employee: e.target.value})}
+                            <Select
+                              className="select"
+                              mode="multiple"
+                              style={{width:'100%'}}
+                              showSearch
+                              optionFilterProp="label"
+                              listHeight={256}        
+                              defaultValue={addForm.employee} // string[]
+                              options={trainingEmployeeOptions} // OptionEmployee[]
+                              onChange={(vals: string[]) => setAddForm({ ...addForm, employee: vals })}
+                              getPopupContainer={getModalContainerEmp}  // render dropdown inside modal
+                              dropdownStyle={{ zIndex: 2000 }} 
+                              placeholder="Select employees"
                             />
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Training Cost
                             </label>
@@ -614,11 +750,8 @@ const TrainingList = () => {
                             />
                           </div>
                         </div>
-                      </div>
-
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Start Date
                             </label>
@@ -638,8 +771,8 @@ const TrainingList = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               End Date
                             </label>
@@ -658,7 +791,6 @@ const TrainingList = () => {
                               </span>
                             </div>
                           </div>
-                        </div>
                       </div>
 
                     <div className="col-md-12">
@@ -726,48 +858,54 @@ const TrainingList = () => {
               </div>
               <form>
                 <div className="modal-body pb-0">
-                  <div className="row">
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                  <div className="row g-4">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Training Type&nbsp;
                             </label>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={editForm.trainingType}
-                              onChange={(e) => setEditForm({ ...editForm, trainingType: e.target.value })}
+                            <CommonSelect
+                              className="select"
+                              defaultValue={toOption(editForm.trainingType)} 
+                              onChange={(opt: OptionTypes | null) =>setEditForm({ ...editForm, trainingType: typeof opt === "string" ? opt : (opt?.value ?? "") })}
+                              options={trainingTypeOptions}
                             />
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">Trainer</label>
-                            <textarea
-                              className="form-control"
-                              rows={1}
-                              value={editForm.trainer}
-                              onChange={(e) => setEditForm({ ...editForm, trainer: e.target.value })}
+                            <CommonSelect
+                              className="select"
+                              defaultValue={toOptionTrainer(editForm.trainer)} 
+                              onChange={(opt: OptionTrainer | null) =>setEditForm({ ...editForm, trainer: typeof opt === "string" ? opt : (opt?.value ?? "") })}
+                              options={trainingTrainerOptions}
                             />
                           </div>
                         </div>
-                      </div>
-
-                      <div className="row g-3">
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">Employee</label>
-                            <textarea
-                              className="form-control"
-                              rows={1}
-                              value={editForm.employee}
-                              onChange={(e) => setEditForm({ ...editForm, employee: e.target.value })}
+                            <Select
+                              className="select"
+                              mode="multiple"
+                              style={{width:'100%'}}
+                              showSearch
+                              optionFilterProp="label"
+                              listHeight={256}
+                              options={trainingEmployeeOptions}                // [{value, label}]
+                              value={editForm.employee}                        // string[] of employeeIds
+                              onChange={(vals: string[]) =>
+                                setEditForm({ ...editForm, employee: vals })   // keep only ids in state
+                              }
+                              getPopupContainer={getModalContainer}  // render dropdown inside modal
+                              dropdownStyle={{ zIndex: 2000 }} 
+                              placeholder="Select employees"
                             />
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">Cost</label>
                             <textarea
                               className="form-control"
@@ -776,12 +914,9 @@ const TrainingList = () => {
                               onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}
                             />
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="row g-3">                
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        </div>            
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               Start Date
                             </label>
@@ -803,8 +938,8 @@ const TrainingList = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="col-md-12">
-                          <div className="mb-3">
+                        <div className="col-md-6">
+                          <div className="mb-0">
                             <label className="form-label">
                               End Date
                             </label>
@@ -825,7 +960,6 @@ const TrainingList = () => {
                               </span>
                             </div>
                           </div>
-                        </div>
                       </div>
 
 
