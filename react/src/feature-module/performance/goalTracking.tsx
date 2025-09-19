@@ -5,6 +5,7 @@ import CollapseHeader from "../../core/common/collapse-header/collapse-header";
 import { goalTrackingData } from "../../core/data/json/goalTrackingData";
 import Table from "../../core/common/dataTable/index";
 import GoalTrackingModal from "../../core/modals/goalTrackingModal";
+import Footer from "../../core/common/footer";
 
 const GoalTracking = () => {
   const routes = all_routes;
@@ -182,15 +183,7 @@ const GoalTracking = () => {
           </div>
           {/* /Performance Indicator list */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 

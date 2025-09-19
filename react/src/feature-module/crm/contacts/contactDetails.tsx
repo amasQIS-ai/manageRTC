@@ -6,6 +6,8 @@ import CommonTabs from "../common-components";
 import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
 import CrmsModal from "../../../core/modals/crms_modal";
 import { useContacts } from "../../../hooks/useContacts";
+import Footer from "../../../core/common/footer";
+
 const ContactDetails = () => {
   const routes = all_routes;
   const { getContact } = useContacts();
@@ -410,15 +412,7 @@ const ContactDetails = () => {
             <CommonTabs />
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       <CrmsModal />
     </>
