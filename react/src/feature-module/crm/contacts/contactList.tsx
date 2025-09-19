@@ -7,6 +7,8 @@ import CollapseHeader from "../../../core/common/collapse-header/collapse-header
 import Table from "../../../core/common/dataTable/index";
 import CrmsModal from "../../../core/modals/crms_modal";
 import { useAuth } from "@clerk/clerk-react";
+import Footer from "../../../core/common/footer";
+
 
 const ContactList = () => {
   const routes = all_routes;
@@ -566,15 +568,10 @@ const ContactList = () => {
             </div>
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed & Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+       
+        {/* Footer */}
+        <Footer />
+      {/* /Footer */}
       </div>
       <CrmsModal />
     </>

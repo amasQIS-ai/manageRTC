@@ -5,6 +5,7 @@ import CollapseHeader from "../../core/common/collapse-header/collapse-header";
 import { trainingTypeData } from "../../core/data/json/trainingTypeData";
 import Table from "../../core/common/dataTable/index";
 import TrainingTypeModal from "../../core/modals/trainingTypeModal";
+import Footer from "../../core/common/footer";
 
 const TrainingType = () => {
   const routes = all_routes;
@@ -142,15 +143,7 @@ const TrainingType = () => {
           </div>
           {/* /Performance Indicator list */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 

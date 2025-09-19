@@ -11,6 +11,7 @@ import { usersDetails } from '../../../core/data/json/usersDetails';
 import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
 import { departmentSelect } from '../../../core/common/selectoption/selectoption';
+import Footer from "../../../core/common/footer";
 
 type PasswordField = "password" | "confirmPassword";
 
@@ -602,15 +603,7 @@ const Designations = () => {
           </div>
           {/* /Performance Indicator list */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
       {/* Add Designation */}

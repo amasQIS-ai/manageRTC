@@ -8,6 +8,8 @@ import PredefinedDateRanges from "../../../core/common/datePicker";
 import { useDeals, Deal } from "../../../hooks/useDeals";
 import Table from "../../../core/common/dataTable/index";
 import CrmsModal from "../../../core/modals/crms_modal";
+import Footer from "../../../core/common/footer";
+
 const DealsList = () => {
   const routes = all_routes;
   const { deals, loading, fetchDeals, updateDeal, deleteDeal } = useDeals();
@@ -451,15 +453,7 @@ const DealsList = () => {
           </div>
           {/* /Contact List */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       <CrmsModal 
         selectedDeal={selectedDeal}

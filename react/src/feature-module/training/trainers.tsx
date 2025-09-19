@@ -6,6 +6,7 @@ import { trainersData } from "../../core/data/json/trainersData";
 import Table from "../../core/common/dataTable/index";
 import ImageWithBasePath from "../../core/common/imageWithBasePath";
 import TrainersModal from "../../core/modals/trainersModal";
+import Footer from "../../core/common/footer";
 
 const Trainers = () => {
   const routes = all_routes;
@@ -158,15 +159,7 @@ const Trainers = () => {
           </div>
           {/* /Performance Indicator list */}
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 
