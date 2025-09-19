@@ -3,22 +3,21 @@ import { Link } from "react-router-dom";
 import { all_routes } from "../../router/all_routes";
 import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
-import { useCandidates, Candidate } from "../../../hooks/useCandidates";
+import { useJobs, Job } from "../../../hooks/useJobs";
 import Table from "../../../core/common/dataTable/index";
 import CollapseHeader from "../../../core/common/collapse-header/collapse-header";
 import ImageWithBasePath from "../../../core/common/imageWithBasePath";
-import AddCandidate from "./add_candidate";
-import EditCandidate from "./edit_candidate";
-import DeleteCandidate from "./delete_candidate";
+import AddJob from "./add_job";
+import EditJob from "./edit_job";
+import DeleteJob from "./delete_job";
 import { message } from "antd";
-import Footer from "../../../core/common/footer";
 
-const CandidatesList = () => {
+const JobList = () => {
   const socket = useSocket() as Socket | null;
-  
+
   // State management using the custom hook
   const {
-    candidates,
+    jobs,
     stats,
     fetchAllData,
     loading,
@@ -26,234 +25,182 @@ const CandidatesList = () => {
     exportPDF,
     exportExcel,
     exporting,
-    updateCandidateStatus,
-  } = useCandidates();
+  } = useJobs();
 
-  const [filteredCandidates, setFilteredCandidates] = useState<Candidate[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   
   // Filter states
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [selectedExperience, setSelectedExperience] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedType, setSelectedType] = useState("");
   const [selectedSort, setSelectedSort] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
-  // Extract unique roles and recruiters for filters
-  const [roles, setRoles] = useState<string[]>([]);
-  const [recruiters, setRecruiters] = useState<string[]>([]);
-
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  // Extract unique categories and types for filters
+  const [categories, setCategories] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
   // Initialize data fetch
   useEffect(() => {
-    console.log("CandidatesList component mounted");
+    console.log("JobList component mounted");
     fetchAllData();
   }, [fetchAllData]);
 
-  // Extract unique values for filters whenever candidates change
+  // Extract unique values for filters whenever jobs change
   useEffect(() => {
-    if (candidates && candidates.length > 0) {
-      // Fix TypeScript error by properly typing the filter operation
-      const uniqueRoles = Array.from(new Set(
-        candidates
-          .map(c => c.applicationInfo?.appliedRole)
-          .filter((role): role is string => Boolean(role))
+    if (jobs && jobs.length > 0) {
+      const uniqueCategories = Array.from(new Set(
+        jobs
+          .map(j => j.category)
+          .filter((category): category is string => Boolean(category))
       ));
       
-      const uniqueRecruiters = Array.from(new Set(
-        candidates
-          .map(c => c.applicationInfo?.recruiterName)
-          .filter((recruiter): recruiter is string => Boolean(recruiter))
+      const uniqueTypes = Array.from(new Set(
+        jobs
+          .map(j => j.type)
+          .filter((type): type is string => Boolean(type))
       ));
 
-      setRoles(uniqueRoles);
-      setRecruiters(uniqueRecruiters);
+      setCategories(uniqueCategories);
+      setTypes(uniqueTypes);
     }
-  }, [candidates]);
+  }, [jobs]);
 
-  // Apply filters whenever candidates or filter states change
+  // Apply filters whenever jobs or filter states change
   useEffect(() => {
-    console.log("[CandidatesList] Applying filters...");
-    console.log("[CandidatesList] Current filters:", {
+    console.log("[JobList] Applying filters...");
+    console.log("[JobList] Current filters:", {
       selectedStatus,
-      selectedRole,
-      selectedExperience,
+      selectedCategory,
+      selectedType,
       selectedSort,
       searchQuery,
       dateRange,
     });
-    console.log("[CandidatesList] Total candidates before filtering:", candidates.length);
 
-    if (!candidates || candidates.length === 0) {
-      setFilteredCandidates([]);
+    if (!jobs || jobs.length === 0) {
+      setFilteredJobs([]);
       return;
     }
 
-    let result = [...candidates];
+    let result = [...jobs];
 
     // Status filter
     if (selectedStatus && selectedStatus !== "") {
-      console.log("[CandidatesList] Filtering by status:", selectedStatus);
-      result = result.filter((candidate) => candidate.status === selectedStatus);
-      console.log("[CandidatesList] After status filter:", result.length);
+      result = result.filter((job) => job.status === selectedStatus);
     }
 
-    // Role filter
-    if (selectedRole && selectedRole !== "") {
-      console.log("[CandidatesList] Filtering by role:", selectedRole);
-      result = result.filter((candidate) => candidate.applicationInfo?.appliedRole === selectedRole);
-      console.log("[CandidatesList] After role filter:", result.length);
+    // Category filter
+    if (selectedCategory && selectedCategory !== "") {
+      result = result.filter((job) => job.category === selectedCategory);
     }
 
-    // Experience level filter
-    if (selectedExperience && selectedExperience !== "") {
-      console.log("[CandidatesList] Filtering by experience:", selectedExperience);
-      result = result.filter((candidate) => {
-        const experience = candidate.professionalInfo?.experienceYears || 0;
-        switch (selectedExperience) {
-          case "Entry Level":
-            return experience < 2;
-          case "Mid Level":
-            return experience >= 2 && experience < 5;
-          case "Senior Level":
-            return experience >= 5 && experience < 10;
-          case "Expert Level":
-            return experience >= 10;
-          default:
-            return true;
-        }
-      });
-      console.log("[CandidatesList] After experience filter:", result.length);
+    // Type filter
+    if (selectedType && selectedType !== "") {
+      result = result.filter((job) => job.type === selectedType);
     }
 
     // Date range filter
     if (dateRange.start && dateRange.end) {
-      console.log("[CandidatesList] Filtering by date range:", dateRange);
       const startDate = new Date(dateRange.start);
       const endDate = new Date(dateRange.end);
-      result = result.filter((candidate) => {
-        const appliedDate = new Date(candidate.applicationInfo?.appliedDate || candidate.createdAt);
-        return appliedDate >= startDate && appliedDate <= endDate;
+      result = result.filter((job) => {
+        const createdDate = new Date(job.createdAt);
+        return createdDate >= startDate && createdDate <= endDate;
       });
-      console.log("[CandidatesList] After date filter:", result.length);
     }
 
     // Search query filter
     if (searchQuery && searchQuery.trim() !== "") {
-      console.log("[CandidatesList] Filtering by search query:", searchQuery);
       const query = searchQuery.toLowerCase().trim();
-      result = result.filter((candidate) => {
-        const fullName = `${candidate.personalInfo?.firstName || ''} ${candidate.personalInfo?.lastName || ''}`.toLowerCase();
-        const email = candidate.personalInfo?.email?.toLowerCase() || '';
-        const phone = candidate.personalInfo?.phone?.toLowerCase() || '';
-        const appliedRole = candidate.applicationInfo?.appliedRole?.toLowerCase() || '';
-        const currentRole = candidate.professionalInfo?.currentRole?.toLowerCase() || '';
-        const skills = candidate.professionalInfo?.skills?.join(' ').toLowerCase() || '';
+      result = result.filter((job) => {
+        const title = job.title?.toLowerCase() || '';
+        const description = job.description?.toLowerCase() || '';
+        const skills = job.skills?.join(' ').toLowerCase() || '';
+        const location = `${job.location?.city || ''} ${job.location?.state || ''} ${job.location?.country || ''}`.toLowerCase();
         
-        return fullName.includes(query) ||
-               email.includes(query) ||
-               phone.includes(query) ||
-               appliedRole.includes(query) ||
-               currentRole.includes(query) ||
-               skills.includes(query);
+        return title.includes(query) ||
+               description.includes(query) ||
+               skills.includes(query) ||
+               location.includes(query);
       });
-      console.log("[CandidatesList] After search filter:", result.length);
     }
 
     // Sort
     if (selectedSort) {
       result.sort((a, b) => {
-        const dateA = new Date(a.applicationInfo?.appliedDate || a.createdAt);
-        const dateB = new Date(b.applicationInfo?.appliedDate || b.createdAt);
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
         
         switch (selectedSort) {
-          case "name_asc":
-            return a.fullName.localeCompare(b.fullName);
-          case "name_desc":
-            return b.fullName.localeCompare(a.fullName);
+          case "title_asc":
+            return a.title.localeCompare(b.title);
+          case "title_desc":
+            return b.title.localeCompare(a.title);
           case "date_recent":
             return dateB.getTime() - dateA.getTime();
           case "date_oldest":
             return dateA.getTime() - dateB.getTime();
-          case "role":
-            return (a.applicationInfo?.appliedRole || '').localeCompare(b.applicationInfo?.appliedRole || '');
-          case "experience":
-            return (b.professionalInfo?.experienceYears || 0) - (a.professionalInfo?.experienceYears || 0);
-          case "status":
-            return a.status.localeCompare(b.status);
+          case "salary_high":
+            return (b.salaryRange?.max || 0) - (a.salaryRange?.max || 0);
+          case "salary_low":
+            return (a.salaryRange?.min || 0) - (b.salaryRange?.min || 0);
+          case "applications":
+            return (b.appliedCount || 0) - (a.appliedCount || 0);
           default:
             return 0;
         }
       });
     }
 
-    console.log("[CandidatesList] Final filtered candidates count:", result.length);
-    setFilteredCandidates(result);
-  }, [candidates, selectedStatus, selectedRole, selectedExperience, selectedSort, searchQuery, dateRange]);
+    setFilteredJobs(result);
+  }, [jobs, selectedStatus, selectedCategory, selectedType, selectedSort, searchQuery, dateRange]);
 
   // Handle filter changes
   const handleStatusChange = (status: string) => {
-    console.log("[CandidatesList] Status filter changed to:", status);
     setSelectedStatus(status);
   };
 
-  const handleRoleChange = (role: string) => {
-    console.log("[CandidatesList] Role filter changed to:", role);
-    setSelectedRole(role);
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
   };
 
-  const handleExperienceChange = (experience: string) => {
-    console.log("[CandidatesList] Experience filter changed to:", experience);
-    setSelectedExperience(experience);
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
   };
 
   const handleSortChange = (sort: string) => {
-    console.log("[CandidatesList] Sort filter changed to:", sort);
     setSelectedSort(sort);
   };
 
   const handleSearchChange = (query: string) => {
-    console.log("[CandidatesList] Search query changed to:", query);
     setSearchQuery(query);
   };
 
-  const handleDateRangeChange = (start: string, end: string) => {
-    console.log("[CandidatesList] Date range changed:", { start, end });
-    setDateRange({ start, end });
-  };
-
   const handleClearFilters = () => {
-    console.log("[CandidatesList] Clearing all filters");
     setSelectedStatus("");
-    setSelectedRole("");
-    setSelectedExperience("");
+    setSelectedCategory("");
+    setSelectedType("");
     setSelectedSort("");
     setSearchQuery("");
     setDateRange({ start: "", end: "" });
   };
 
-  // Handle candidate actions
-  const handleEditCandidate = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
+  // Handle job actions
+  const handleEditJob = (job: Job) => {
+    setSelectedJob(job);
     window.dispatchEvent(
-      new CustomEvent("edit-candidate", { detail: { candidate } })
+      new CustomEvent("edit-job", { detail: { job } })
     );
   };
 
-  const handleDeleteCandidate = (candidate: Candidate) => {
-    setSelectedCandidate(candidate);
+  const handleDeleteJob = (job: Job) => {
+    setSelectedJob(job);
     window.dispatchEvent(
-      new CustomEvent("delete-candidate", { detail: { candidate } })
+      new CustomEvent("delete-job", { detail: { job } })
     );
-  };
-
-  // Handle status change
-  const handleStatusUpdate = async (candidateId: string, newStatus: string) => {
-    const success = await updateCandidateStatus(candidateId, newStatus, `Status updated to ${newStatus}`);
-    if (success) {
-      // Data will be refreshed automatically via the hook
-    }
   };
 
   // Export functions
@@ -268,155 +215,138 @@ const CandidatesList = () => {
   // Get status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case "New Application":
-        return "badge bg-info";
-      case "Screening":
-        return "badge bg-warning";
-      case "Interview":
-        return "badge bg-primary";
-      case "Technical Test":
-        return "badge bg-secondary";
-      case "Offer Stage":
+      case "Active":
         return "badge bg-success";
-      case "Hired":
-        return "badge bg-success";
-      case "Rejected":
+      case "Inactive":
         return "badge bg-danger";
       default:
         return "badge bg-light text-dark";
     }
   };
 
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "software":
+        return "ti ti-code";
+      case "hardware":
+        return "ti ti-cpu";
+      case "design":
+        return "ti ti-palette";
+      case "marketing":
+        return "ti ti-speakerphone";
+      case "sales":
+        return "ti ti-chart-line";
+      case "hr":
+        return "ti ti-users";
+      case "finance":
+        return "ti ti-coins";
+      default:
+        return "ti ti-briefcase";
+    }
+  };
+
   // Table columns configuration
   const columns = [
     {
-      title: "Application ID",
-      dataIndex: "applicationNumber",
-      render: (text: string, record: Candidate) => (
-        <span className="fw-semibold text-primary">
-          {record.applicationNumber || record._id.slice(-8).toUpperCase()}
-        </span>
-      ),
-      sorter: (a: Candidate, b: Candidate) => 
-        (a.applicationNumber || '').localeCompare(b.applicationNumber || ''),
-    },
-    {
-      title: "Candidate",
-      dataIndex: "fullName",
-      render: (text: string, record: Candidate) => (
+      title: "Job Title",
+      dataIndex: "title",
+      render: (text: string, record: Job) => (
         <div className="d-flex align-items-center">
-          <div className="avatar avatar-sm me-2">
-            <ImageWithBasePath
-              src="assets/img/profiles/avatar-01.jpg"
-              className="img-fluid rounded-circle"
-              alt="Profile"
-            />
+          <div className="avatar avatar-sm me-2 bg-primary-transparent rounded">
+            <i className={`${getCategoryIcon(record.category)} fs-16`}></i>
           </div>
           <div>
-            <h6 className="fw-medium mb-0">{record.fullName}</h6>
-            <span className="fs-13 text-muted">{record.personalInfo?.email}</span>
+            <h6 className="fw-medium mb-0">{record.title}</h6>
+            <span className="fs-13 text-muted">{record.category}</span>
           </div>
         </div>
       ),
-      sorter: (a: Candidate, b: Candidate) => a.fullName.localeCompare(b.fullName),
+      sorter: (a: Job, b: Job) => a.title.localeCompare(b.title),
     },
     {
-      title: "Applied Role",
-      dataIndex: "appliedRole",
-      render: (text: string, record: Candidate) => (
-        <span>{record.applicationInfo?.appliedRole || "N/A"}</span>
+      title: "Type",
+      dataIndex: "type",
+      render: (text: string, record: Job) => (
+        <span className="badge bg-light text-dark">{record.type}</span>
       ),
-      sorter: (a: Candidate, b: Candidate) =>
-        (a.applicationInfo?.appliedRole || '').localeCompare(b.applicationInfo?.appliedRole || ''),
+      sorter: (a: Job, b: Job) => a.type.localeCompare(b.type),
     },
     {
-      title: "Phone",
-      dataIndex: "phone",
-      render: (text: string, record: Candidate) => 
-        record.personalInfo?.phone || "N/A",
-      sorter: (a: Candidate, b: Candidate) =>
-        (a.personalInfo?.phone || '').localeCompare(b.personalInfo?.phone || ''),
-    },
-    {
-      title: "Experience",
-      dataIndex: "experience",
-      render: (text: string, record: Candidate) => (
-        <span>{record.professionalInfo?.experienceYears || 0} years</span>
+      title: "Location",
+      dataIndex: "location",
+      render: (text: any, record: Job) => (
+        <span>
+          {record.location?.city && record.location?.state && record.location?.country 
+            ? `${record.location.city}, ${record.location.state}, ${record.location.country}`
+            : "Not specified"}
+        </span>
       ),
-      sorter: (a: Candidate, b: Candidate) =>
-        (a.professionalInfo?.experienceYears || 0) - (b.professionalInfo?.experienceYears || 0),
     },
     {
-      title: "Applied Date",
-      dataIndex: "appliedDate",
-      render: (text: string, record: Candidate) => {
-        const date = record.applicationInfo?.appliedDate 
-          ? new Date(record.applicationInfo.appliedDate)
-          : null;
-        return date ? date.toLocaleDateString() : "N/A";
-      },
-      sorter: (a: Candidate, b: Candidate) => {
-        const dateA = new Date(a.applicationInfo?.appliedDate || a.createdAt);
-        const dateB = new Date(b.applicationInfo?.appliedDate || b.createdAt);
-        return dateB.getTime() - dateA.getTime();
-      },
+      title: "Salary Range",
+      dataIndex: "salaryRange",
+      render: (text: any, record: Job) => (
+        <span>
+          {record.salaryRange?.min && record.salaryRange?.max 
+            ? `${record.salaryRange.min.toLocaleString()} - ${record.salaryRange.max.toLocaleString()} ${record.salaryRange.currency}`
+            : "Not specified"}
+        </span>
+      ),
+      sorter: (a: Job, b: Job) => (a.salaryRange?.max || 0) - (b.salaryRange?.max || 0),
+    },
+    {
+      title: "Positions",
+      dataIndex: "numberOfPositions",
+      render: (text: string, record: Job) => (
+        <span>{record.numberOfPositions}</span>
+      ),
+      sorter: (a: Job, b: Job) => a.numberOfPositions - b.numberOfPositions,
+    },
+    {
+      title: "Applications",
+      dataIndex: "appliedCount",
+      render: (text: string, record: Job) => (
+        <span className="fw-semibold text-primary">{record.appliedCount || 0}</span>
+      ),
+      sorter: (a: Job, b: Job) => (a.appliedCount || 0) - (b.appliedCount || 0),
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (text: string, record: Candidate) => (
-        <div className="dropdown">
-          <button
-            className={`${getStatusBadgeClass(record.status)} dropdown-toggle border-0`}
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            style={{ cursor: 'pointer' }}
-          >
-            {record.status}
-          </button>
-          <ul className="dropdown-menu">
-            {["New Application", "Screening", "Interview", "Technical Test", "Offer Stage", "Hired", "Rejected"].map(status => (
-              <li key={status}>
-                <button
-                  className="dropdown-item"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (status !== record.status) {
-                      handleStatusUpdate(record._id, status);
-                    }
-                  }}
-                >
-                  {status}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      render: (text: string, record: Job) => (
+        <span className={getStatusBadgeClass(record.status)}>
+          {record.status}
+        </span>
       ),
-      sorter: (a: Candidate, b: Candidate) => a.status.localeCompare(b.status),
+      sorter: (a: Job, b: Job) => a.status.localeCompare(b.status),
     },
     {
-      title: "Recruiter",
-      dataIndex: "recruiter",
-      render: (text: string, record: Candidate) => 
-        record.applicationInfo?.recruiterName || "N/A",
-      sorter: (a: Candidate, b: Candidate) =>
-        (a.applicationInfo?.recruiterName || '').localeCompare(b.applicationInfo?.recruiterName || ''),
+      title: "Posted Date",
+      dataIndex: "createdAt",
+      render: (text: string, record: Job) => {
+        const date = new Date(record.createdAt);
+        return date.toLocaleDateString();
+      },
+      sorter: (a: Job, b: Job) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      },
     },
     {
       title: "Actions",
       dataIndex: "actions",
-      render: (text: any, record: Candidate) => (
+      render: (text: any, record: Job) => (
         <div className="d-flex align-items-center gap-2">
           <button
             className="btn btn-sm btn-outline-primary"
             onClick={(e) => {
               e.preventDefault();
-              handleEditCandidate(record);
+              handleEditJob(record);
             }}
             data-bs-toggle="modal"
-            data-bs-target="#edit_candidate"
+            data-bs-target="#edit_job"
           >
             <i className="ti ti-edit"></i>
           </button>
@@ -424,10 +354,10 @@ const CandidatesList = () => {
             className="btn btn-sm btn-outline-danger"
             onClick={(e) => {
               e.preventDefault();
-              handleDeleteCandidate(record);
+              handleDeleteJob(record);
             }}
             data-bs-toggle="modal"
-            data-bs-target="#delete_candidate"
+            data-bs-target="#delete_job"
           >
             <i className="ti ti-trash"></i>
           </button>
@@ -444,36 +374,30 @@ const CandidatesList = () => {
           {/* Breadcrumb */}
           <div className="d-md-flex d-block align-items-center justify-content-between mb-3">
             <div className="my-auto mb-2">
-              <h3 className="page-title mb-1">Candidates</h3>
+              <h3 className="page-title mb-1">Jobs</h3>
               <nav>
                 <ol className="breadcrumb mb-0">
                   <li className="breadcrumb-item">
                     <Link to={all_routes.adminDashboard}>Dashboard</Link>
                   </li>
-                  <li className="breadcrumb-item">Employee</li>
+                  <li className="breadcrumb-item">Recruitment</li>
                   <li className="breadcrumb-item active" aria-current="page">
-                    Candidate List
+                    Job List
                   </li>
                 </ol>
               </nav>
             </div>
             <div className="d-flex my-xl-auto right-content align-items-center flex-wrap">
-              <div className="me-2 mb-2">
+               <div className="me-2 mb-2">
                 <div className="d-flex align-items-center border bg-white rounded p-1 me-2 icon-list">
                   <Link
-                    to={all_routes.candidateskanban}
-                    className="btn btn-icon btn-sm me-1"
-                  >
-                    <i className="ti ti-layout-kanban" />
-                  </Link>
-                  <Link
-                    to={all_routes.candidateslist}
-                    className="btn btn-icon btn-sm active bg-primary text-white me-1"
+                    to={all_routes.joblist}
+                    className="btn btn-icon btn-sm active bg-primary text-white"
                   >
                     <i className="ti ti-list-tree" />
                   </Link>
                   <Link
-                    to={all_routes.candidateskanban}
+                    to={all_routes.jobgrid}
                     className="btn btn-icon btn-sm"
                   >
                     <i className="ti ti-layout-grid" />
@@ -521,10 +445,10 @@ const CandidatesList = () => {
                 <Link
                   to="#"
                   data-bs-toggle="modal"
-                  data-bs-target="#add_candidate"
+                  data-bs-target="#add_job"
                   className="btn btn-primary d-flex align-items-center"
                 >
-                  <i className="ti ti-plus me-2"></i>Add Candidate
+                  <i className="ti ti-plus me-2"></i>Add Job
                 </Link>
               </div>
               <CollapseHeader />
@@ -532,18 +456,18 @@ const CandidatesList = () => {
           </div>
           {/* /Breadcrumb */}
 
-          {/* Candidates Statistics */}
+          {/* Job Statistics */}
           <div className="row">
             <div className="col-xl-3 col-md-6">
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="me-2">
-                      <p className="fs-13 fw-medium text-gray-9 mb-1">Total Candidates</p>
-                      <h4>{stats?.totalCandidates || 0}</h4>
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Total Jobs</p>
+                      <h4>{stats?.totalJobs || 0}</h4>
                     </div>
                     <span className="avatar avatar-lg bg-primary-transparent rounded-circle">
-                      <i className="ti ti-users fs-20"></i>
+                      <i className="ti ti-briefcase fs-20"></i>
                     </span>
                   </div>
                 </div>
@@ -554,38 +478,8 @@ const CandidatesList = () => {
                 <div className="card-body">
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="me-2">
-                      <p className="fs-13 fw-medium text-gray-9 mb-1">New Applications</p>
-                      <h4>{stats?.newApplications || 0}</h4>
-                    </div>
-                    <span className="avatar avatar-lg bg-info-transparent rounded-circle">
-                      <i className="ti ti-user-plus fs-20"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-xl-3 col-md-6">
-              <div className="card">
-                <div className="card-body">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="me-2">
-                      <p className="fs-13 fw-medium text-gray-9 mb-1">In Interview</p>
-                      <h4>{stats?.interview || 0}</h4>
-                    </div>
-                    <span className="avatar avatar-lg bg-warning-transparent rounded-circle">
-                      <i className="ti ti-message-circle fs-20"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-xl-3 col-md-6">
-              <div className="card">
-                <div className="card-body">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="me-2">
-                      <p className="fs-13 fw-medium text-gray-9 mb-1">Hired This Month</p>
-                      <h4>{stats?.monthlyHires || 0}</h4>
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Active Jobs</p>
+                      <h4>{stats?.activeJobs || 0}</h4>
                     </div>
                     <span className="avatar avatar-lg bg-success-transparent rounded-circle">
                       <i className="ti ti-check fs-20"></i>
@@ -594,13 +488,43 @@ const CandidatesList = () => {
                 </div>
               </div>
             </div>
+            <div className="col-xl-3 col-md-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">Inactive Jobs</p>
+                      <h4>{stats?.inactiveJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-lg bg-danger-transparent rounded-circle">
+                      <i className="ti ti-x fs-20"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-xl-3 col-md-6">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="me-2">
+                      <p className="fs-13 fw-medium text-gray-9 mb-1">New Jobs</p>
+                      <h4>{stats?.newJobs || 0}</h4>
+                    </div>
+                    <span className="avatar avatar-lg bg-info-transparent rounded-circle">
+                      <i className="ti ti-plus fs-20"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          {/* /Candidates Statistics */}
+          {/* /Job Statistics */}
 
-          {/* Candidates List */}
+          {/* Job List */}
           <div className="card">
             <div className="card-header d-flex align-items-center justify-content-between flex-wrap pb-0">
-              <h4 className="mb-3">Candidates List</h4>
+              <h4 className="mb-3">Job List</h4>
               <div className="d-flex align-items-center flex-wrap">
                 {/* Search Input */}
                 <div className="input-icon-start mb-3 me-2 position-relative">
@@ -610,7 +534,7 @@ const CandidatesList = () => {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Search candidates..."
+                    placeholder="Search jobs..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
@@ -622,7 +546,6 @@ const CandidatesList = () => {
                     to="#"
                     className="btn btn-outline-light bg-white dropdown-toggle"
                     data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
                   >
                     {selectedStatus ? `Status: ${selectedStatus}` : "Select Status"}
                   </Link>
@@ -638,7 +561,7 @@ const CandidatesList = () => {
                         All Status
                       </Link>
                     </div>
-                    {["New Application", "Screening", "Interview", "Technical Test", "Offer Stage", "Hired", "Rejected"].map(status => (
+                    {["Active", "Inactive"].map(status => (
                       <div key={status} className="dropdown-item">
                         <Link
                           to="#"
@@ -654,15 +577,14 @@ const CandidatesList = () => {
                   </div>
                 </div>
 
-                {/* Role Filter */}
+                {/* Category Filter */}
                 <div className="dropdown mb-3 me-2">
                   <Link
                     to="#"
                     className="btn btn-outline-light bg-white dropdown-toggle"
                     data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
                   >
-                    {selectedRole ? `Role: ${selectedRole}` : "Select Role"}
+                    {selectedCategory ? `Category: ${selectedCategory}` : "Select Category"}
                   </Link>
                   <div className="dropdown-menu dropdown-menu-end p-3">
                     <div className="dropdown-item">
@@ -670,37 +592,36 @@ const CandidatesList = () => {
                         to="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleRoleChange("");
+                          handleCategoryChange("");
                         }}
                       >
-                        All Roles
+                        All Categories
                       </Link>
                     </div>
-                    {roles.map(role => (
-                      <div key={role} className="dropdown-item">
+                    {categories.map(category => (
+                      <div key={category} className="dropdown-item">
                         <Link
                           to="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            handleRoleChange(role);
+                            handleCategoryChange(category);
                           }}
                         >
-                          {role}
+                          {category}
                         </Link>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Experience Filter */}
+                {/* Type Filter */}
                 <div className="dropdown mb-3 me-2">
                   <Link
                     to="#"
                     className="btn btn-outline-light bg-white dropdown-toggle"
                     data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
                   >
-                    {selectedExperience ? `Experience: ${selectedExperience}` : "Experience Level"}
+                    {selectedType ? `Type: ${selectedType}` : "Select Type"}
                   </Link>
                   <div className="dropdown-menu dropdown-menu-end p-3">
                     <div className="dropdown-item">
@@ -708,22 +629,22 @@ const CandidatesList = () => {
                         to="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleExperienceChange("");
+                          handleTypeChange("");
                         }}
                       >
-                        All Levels
+                        All Types
                       </Link>
                     </div>
-                    {["Entry Level", "Mid Level", "Senior Level", "Expert Level"].map(level => (
-                      <div key={level} className="dropdown-item">
+                    {types.map(type => (
+                      <div key={type} className="dropdown-item">
                         <Link
                           to="#"
                           onClick={(e) => {
                             e.preventDefault();
-                            handleExperienceChange(level);
+                            handleTypeChange(type);
                           }}
                         >
-                          {level}
+                          {type}
                         </Link>
                       </div>
                     ))}
@@ -736,21 +657,22 @@ const CandidatesList = () => {
                     to="#"
                     className="btn btn-outline-light bg-white dropdown-toggle"
                     data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
                   >
                     {selectedSort
                       ? `Sort: ${
-                          selectedSort === "name_asc"
-                            ? "Name A-Z"
-                            : selectedSort === "name_desc"
-                            ? "Name Z-A"
+                          selectedSort === "title_asc"
+                            ? "A-Z"
+                            : selectedSort === "title_desc"
+                            ? "Z-A"
                             : selectedSort === "date_recent"
-                            ? "Recent First"
+                            ? "Recent"
                             : selectedSort === "date_oldest"
-                            ? "Oldest First"
-                            : selectedSort === "experience"
-                            ? "Experience"
-                            : "Role"
+                            ? "Oldest"
+                            : selectedSort === "salary_high"
+                            ? "High Salary"
+                            : selectedSort === "salary_low"
+                            ? "Low Salary"
+                            : "Applications"
                         }`
                       : "Sort By"}
                   </Link>
@@ -760,10 +682,10 @@ const CandidatesList = () => {
                         to="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSortChange("name_asc");
+                          handleSortChange("title_asc");
                         }}
                       >
-                        Name A-Z
+                        Title A-Z
                       </Link>
                     </div>
                     <div className="dropdown-item">
@@ -771,10 +693,10 @@ const CandidatesList = () => {
                         to="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSortChange("name_desc");
+                          handleSortChange("title_desc");
                         }}
                       >
-                        Name Z-A
+                        Title Z-A
                       </Link>
                     </div>
                     <div className="dropdown-item">
@@ -785,7 +707,7 @@ const CandidatesList = () => {
                           handleSortChange("date_recent");
                         }}
                       >
-                        Recently Applied
+                        Recently Posted
                       </Link>
                     </div>
                     <div className="dropdown-item">
@@ -804,10 +726,32 @@ const CandidatesList = () => {
                         to="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          handleSortChange("experience");
+                          handleSortChange("salary_high");
                         }}
                       >
-                        By Experience
+                        Highest Salary
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("salary_low");
+                        }}
+                      >
+                        Lowest Salary
+                      </Link>
+                    </div>
+                    <div className="dropdown-item">
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSortChange("applications");
+                        }}
+                      >
+                        Most Applications
                       </Link>
                     </div>
                   </div>
@@ -815,8 +759,8 @@ const CandidatesList = () => {
 
                 {/* Clear Filters */}
                 {(selectedStatus ||
-                  selectedRole ||
-                  selectedExperience ||
+                  selectedCategory ||
+                  selectedType ||
                   selectedSort ||
                   searchQuery ||
                   dateRange.start ||
@@ -841,14 +785,14 @@ const CandidatesList = () => {
               {loading ? (
                 <div className="text-center p-4">
                   <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Loading candidates...</span>
+                    <span className="visually-hidden">Loading jobs...</span>
                   </div>
-                  <p className="mt-2">Loading candidates...</p>
+                  <p className="mt-2">Loading jobs...</p>
                 </div>
               ) : error ? (
                 <div className="text-center p-4">
                   <div className="alert alert-danger" role="alert">
-                    <strong>Error loading candidates:</strong> {error}
+                    <strong>Error loading jobs:</strong> {error}
                   </div>
                   <button
                     className="btn btn-primary"
@@ -863,11 +807,11 @@ const CandidatesList = () => {
                   <div className="px-4 py-3 border-bottom bg-light">
                     <div className="d-flex align-items-center justify-content-between">
                       <span className="text-muted">
-                        Showing {filteredCandidates.length} of {candidates.length} candidates
+                        Showing {filteredJobs.length} of {jobs.length} jobs
                       </span>
                       {(selectedStatus ||
-                        selectedRole ||
-                        selectedExperience ||
+                        selectedCategory ||
+                        selectedType ||
                         selectedSort ||
                         searchQuery ||
                         dateRange.start ||
@@ -875,19 +819,18 @@ const CandidatesList = () => {
                         <div className="text-muted small">
                           Filters applied:
                           {selectedStatus && ` Status: ${selectedStatus}`}
-                          {selectedRole && ` Role: ${selectedRole}`}
-                          {selectedExperience && ` Experience: ${selectedExperience}`}
+                          {selectedCategory && ` Category: ${selectedCategory}`}
+                          {selectedType && ` Type: ${selectedType}`}
                           {selectedSort && ` Sort: ${selectedSort}`}
                           {searchQuery && ` Search: "${searchQuery}"`}
-                          {(dateRange.start || dateRange.end) && ` Date Range Applied`}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Candidates Table */}
+                  {/* Job Table */}
                   <Table
-                    dataSource={filteredCandidates}
+                    dataSource={filteredJobs}
                     columns={columns}
                     Selection={true}
                   />
@@ -895,7 +838,7 @@ const CandidatesList = () => {
               )}
             </div>
           </div>
-          {/* /Candidates List */}
+          {/* /Job List */}
         </div>
 
         {/* Footer */}
@@ -913,11 +856,11 @@ const CandidatesList = () => {
       {/* /Page Wrapper */}
 
       {/* Modal Components */}
-      <AddCandidate />
-      <EditCandidate />
-      <DeleteCandidate />
+      <AddJob />
+      <EditJob />
+      <DeleteJob />
     </>
   );
 };
 
-export default CandidatesList;
+export default JobList;
