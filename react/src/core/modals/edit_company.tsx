@@ -1,16 +1,228 @@
-import { DatePicker } from 'antd';
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import CommonSelect from '../common/commonSelect';
-import { beforeuse, city, company, contacts, deals, guests, owner, owners, state, status } from '../common/selectoption/selectoption';
-import { label } from 'yet-another-react-lightbox/*';
-import CommonTagsInput from '../common/Taginput';
-import ImageWithBasePath from '../common/imageWithBasePath';
+import { DatePicker } from "antd";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import CommonSelect from "../common/commonSelect";
+import {
+  beforeuse,
+  city,
+  company,
+  contacts,
+  deals,
+  guests,
+  owner,
+  owners,
+  state,
+  status,
+} from "../common/selectoption/selectoption";
+import { label } from "yet-another-react-lightbox/*";
+import CommonTagsInput from "../common/Taginput";
+import ImageWithBasePath from "../common/imageWithBasePath";
 
+import { useAuth } from "@clerk/clerk-react";
 const EditCompany = () => {
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+
+  const { getToken } = useAuth();
+  const [form, setForm] = useState<any>({});
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<any>({});
+
+  // Load company data when modal opens
+  useEffect(() => {
+    const loadCompanyData = async () => {
+      const companyId = (window as any).CURRENT_COMPANY_ID;
+      const companyData = (window as any).CURRENT_COMPANY_DATA;
+
+      if (companyData) {
+        // Use pre-loaded data
+        setForm({
+          name: companyData.name || "",
+          email: companyData.email || "",
+          phone: companyData.phone || "",
+          phone2: companyData.phone2 || "",
+          fax: companyData.fax || "",
+          address: companyData.address?.street || "",
+          city: companyData.address?.city || companyData.city || "",
+          state: companyData.address?.state || companyData.state || "",
+          zipcode: companyData.address?.zipCode || companyData.zipcode || "",
+          country: companyData.address?.country || companyData.country || "",
+          website: companyData.website || "",
+          industry: companyData.industry || "",
+          source: companyData.source || "",
+          currency: companyData.currency || "",
+          language: companyData.language || "",
+          about: companyData.about || "",
+          rating: companyData.rating || "",
+          status: companyData.status || "Active",
+          ownerName: companyData.ownerName || "",
+          facebook: companyData.socialLinks?.facebook || "",
+          twitter: companyData.socialLinks?.twitter || "",
+          linkedin: companyData.socialLinks?.linkedin || "",
+          skype: companyData.socialLinks?.skype || "",
+          whatsapp: companyData.socialLinks?.whatsapp || "",
+          instagram: companyData.socialLinks?.instagram || "",
+        });
+      } else if (companyId) {
+        // Fetch data from API
+        setLoading(true);
+        try {
+          const token = await getToken();
+          const response = await fetch(
+            `${API_BASE_URL}/api/companies/${companyId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          const data = await response.json();
+          if (data.done) {
+            const company = data.data;
+            setForm({
+              name: company.name || "",
+              email: company.email || "",
+              phone: company.phone || "",
+              phone2: company.phone2 || "",
+              fax: company.fax || "",
+              address: company.address?.street || "",
+              city: company.address?.city || company.city || "",
+              state: company.address?.state || company.state || "",
+              zipcode: company.address?.zipCode || company.zipcode || "",
+              country: company.address?.country || company.country || "",
+              website: company.website || "",
+              industry: company.industry || "",
+              source: company.source || "",
+              currency: company.currency || "",
+              language: company.language || "",
+              about: company.about || "",
+              rating: company.rating || "",
+              status: company.status || "Active",
+              ownerName: company.ownerName || "",
+              facebook: company.socialLinks?.facebook || "",
+              twitter: company.socialLinks?.twitter || "",
+              linkedin: company.socialLinks?.linkedin || "",
+              skype: company.socialLinks?.skype || "",
+              whatsapp: company.socialLinks?.whatsapp || "",
+              instagram: company.socialLinks?.instagram || "",
+            });
+          }
+        } catch (error) {
+          console.error("Error loading company:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    // Listen for modal show event
+    const modal = document.getElementById("edit_company");
+    if (modal) {
+      modal.addEventListener("shown.bs.modal", loadCompanyData);
+      return () => {
+        modal.removeEventListener("shown.bs.modal", loadCompanyData);
+      };
+    }
+  }, [getToken, API_BASE_URL]);
+
+  const onChange = (e: any) => {
+    const { name, value } = e.target;
+    setForm((p: any) => ({ ...p, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev: any) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: any = {};
+
+    if (!form.name?.trim()) {
+      newErrors.name = "Company name is required";
+    }
+    if (!form.email?.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    if (!form.phone?.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const onSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const id = (window as any).CURRENT_COMPANY_ID;
+      if (!id) return;
+
+      const token = await getToken();
+      const payload = {
+        ...form,
+        address: {
+          street: form.address || "",
+          city: form.city || "",
+          state: form.state || "",
+          zipCode: form.zipcode || "",
+          country: form.country || "",
+          fullAddress: `${form.address || ""}, ${form.city || ""}, ${
+            form.state || ""
+          } ${form.zipcode || ""}, ${form.country || ""}`,
+        },
+        socialLinks: {
+          facebook: form.facebook || "",
+          twitter: form.twitter || "",
+          linkedin: form.linkedin || "",
+          skype: form.skype || "",
+          whatsapp: form.whatsapp || "",
+          instagram: form.instagram || "",
+        },
+        rating: Number(form.rating) || 0,
+      };
+
+      const res = await fetch(`${API_BASE_URL}/api/companies/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.done) {
+        window.dispatchEvent(new CustomEvent("companies:changed"));
+
+        // Close modal
+        const modal = document.getElementById("edit_company");
+        if (modal) {
+          const modalInstance = (window as any).bootstrap?.Modal?.getInstance(
+            modal
+          );
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+        }
+
+        alert("Company updated successfully!");
+      } else {
+        alert(`Failed to update company: ${data.error}`);
+      }
+    } catch (err) {
+      console.error("edit company error", err);
+      alert("Error updating company. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getModalContainer = () => {
-    const modalElement = document.getElementById('modal-datepicker');
+    const modalElement = document.getElementById("modal-datepicker");
     return modalElement ? modalElement : document.body; // Fallback to document.body if modalElement is null
   };
   const companyName = [
@@ -24,13 +236,13 @@ const EditCompany = () => {
     { value: "Collins", label: "Collins" },
     { value: "Konopelski", label: "Konopelski" },
     { value: "Adams", label: "Adams" },
-  ]
+  ];
   const owner = [
     { value: "Select", label: "Select" },
     { value: "Hendry Milner", label: "Hendry Milner" },
     { value: "Guilory Berggren", label: "Guilory Berggren" },
     { value: "Jami Carlile", label: "Jami Carlile" },
-  ]
+  ];
   const industryChoose = [
     { value: "Select", label: "Select" },
     { value: "Retail Industry", label: "Retail Industry" },
@@ -38,7 +250,7 @@ const EditCompany = () => {
     { value: "Hotels", label: "Hotels" },
     { value: "Financial Services", label: "Financial Services" },
     { value: "Insurance", label: "Insurance" },
-  ]
+  ];
   const sourcesChoose = [
     { value: "Select", label: "Select" },
     { value: "Phone Calls", label: "Phone Calls" },
@@ -46,17 +258,17 @@ const EditCompany = () => {
     { value: "Refferal Sites", label: "Refferal Sites" },
     { value: "Web Analytics", label: "Web Analytics" },
     { value: "Previous Purchase", label: "Previous Purchase" },
-  ]
+  ];
   const currencyChoose = [
     { value: "Select", label: "Select" },
     { value: "USD", label: "USD" },
     { value: "Euro", label: "Euro" },
-  ]
+  ];
   const languageChoose = [
     { value: "Select", label: "Select" },
     { value: "English", label: "English" },
     { value: "Arabic", label: "Arabic" },
-  ]
+  ];
   const contactChoose = [
     { value: "Select", label: "Select" },
     { value: "Darlee Robertson", label: "Darlee Robertson" },
@@ -64,39 +276,44 @@ const EditCompany = () => {
     { value: "Vaughan", label: "Vaughan" },
     { value: "Jessica", label: "Jessica" },
     { value: "Carol Thomas", label: "Carol Thomas" },
-  ]
+  ];
   const countryChoose = [
     { value: "Select", label: "Select" },
     { value: "USA", label: "USA" },
     { value: "Canada", label: "Canada" },
     { value: "Germany", label: "Germany" },
     { value: "France", label: "France" },
-  ]
+  ];
   const stateChoose = [
     { value: "Select", label: "Select" },
     { value: "California", label: "California" },
     { value: "New York", label: "New York" },
     { value: "Texas", label: "Texas" },
     { value: "Florida", label: "Florida" },
-  ]
+  ];
   const cityChoose = [
     { value: "Select", label: "Select" },
     { value: "Los Angeles", label: "Los Angeles" },
     { value: "San Diego", label: "San Diego" },
     { value: "Fresno", label: "Fresno" },
     { value: "San Francisco", label: "San Francisco" },
-  ]
+  ];
   const status = [
     { value: "Select", label: "Select" },
     { value: "Active", label: "Active" },
     { value: "Inactive", label: "Inactive" },
-  ]
+  ];
   const reviewChoose = [
     { value: "Select", label: "Select" },
     { value: "Lowest", label: "Lowest" },
     { value: "Highest", label: "Highest" },
-  ]
-  const [tags, setTags] = useState<string[]>(["Collab", "Promotion", "Rated", "Davis"]);
+  ];
+  const [tags, setTags] = useState<string[]>([
+    "Collab",
+    "Promotion",
+    "Rated",
+    "Davis",
+  ]);
   return (
     <>
       {/* Edit Company */}
@@ -114,7 +331,7 @@ const EditCompany = () => {
                 <i className="ti ti-x" />
               </button>
             </div>
-            <form >
+            <form>
               <div className="contact-grids-tab">
                 <ul className="nav nav-underline" id="myTab" role="tablist">
                   <li className="nav-item" role="presentation">
@@ -189,7 +406,9 @@ const EditCompany = () => {
                           <div className="profile-upload">
                             <div className="mb-2">
                               <h6 className="mb-1">Upload Profile Image</h6>
-                              <p className="fs-12">Image should be below 4 mb</p>
+                              <p className="fs-12">
+                                Image should be below 4 mb
+                              </p>
                             </div>
                             <div className="profile-uploader d-flex align-items-center">
                               <div className="drag-upload-btn btn btn-sm btn-primary me-2">
@@ -200,10 +419,7 @@ const EditCompany = () => {
                                   multiple
                                 />
                               </div>
-                              <Link
-                                to="#"
-                                className="btn btn-light btn-sm"
-                              >
+                              <Link to="#" className="btn btn-light btn-sm">
                                 Cancel
                               </Link>
                             </div>
@@ -215,13 +431,25 @@ const EditCompany = () => {
                           <label className="form-label">
                             Company Name <span className="text-danger">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="name"
+                            value={form.name || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Email</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="email"
+                            value={form.email || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -229,25 +457,49 @@ const EditCompany = () => {
                           <label className="form-label">
                             Phone Number <span className="text-danger">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="phone"
+                            value={form.phone || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Phone Number 2</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="phone2"
+                            value={form.phone2 || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Fax</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="fax"
+                            value={form.fax || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Website</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="website"
+                            value={form.website || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -256,7 +508,13 @@ const EditCompany = () => {
                             Ratings <span className="text-danger"> *</span>
                           </label>
                           <div className="input-icon-end position-relative">
-                            <input type="text" className="form-control" />
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="rating"
+                              value={form.rating || ""}
+                              onChange={onChange}
+                            />
                             <span className="input-icon-addon">
                               <i className="ti ti-star text-gray-6" />
                             </span>
@@ -269,7 +527,7 @@ const EditCompany = () => {
                             Owner <span className="text-danger">*</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={owner}
                             defaultValue={owner[1]}
                           />
@@ -305,7 +563,7 @@ const EditCompany = () => {
                             </Link>
                           </div>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={deals}
                             defaultValue={deals[1]}
                           />
@@ -317,9 +575,15 @@ const EditCompany = () => {
                             Industry <span className="text-danger">*</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={industryChoose}
                             defaultValue={industryChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                industry: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -329,9 +593,15 @@ const EditCompany = () => {
                             Source <span className="text-danger">*</span>{" "}
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={sourcesChoose}
                             defaultValue={sourcesChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                source: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -341,9 +611,15 @@ const EditCompany = () => {
                             Currency <span className="text-danger">*</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={currencyChoose}
                             defaultValue={currencyChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                currency: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -353,9 +629,15 @@ const EditCompany = () => {
                             Language <span className="text-danger">*</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={languageChoose}
                             defaultValue={languageChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                language: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -364,7 +646,12 @@ const EditCompany = () => {
                           <label className="form-label">
                             About <span className="text-danger">*</span>
                           </label>
-                          <textarea className="form-control" defaultValue={""} />
+                          <textarea
+                            className="form-control"
+                            name="about"
+                            value={form.about || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-12">
@@ -384,7 +671,7 @@ const EditCompany = () => {
                             </Link>
                           </div>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={contactChoose}
                             defaultValue={contactChoose[1]}
                           />
@@ -400,7 +687,11 @@ const EditCompany = () => {
                     >
                       Cancel
                     </button>
-                    <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                    <button
+                      type="button"
+                      data-bs-dismiss="modal"
+                      className="btn btn-primary"
+                    >
                       Save{" "}
                     </button>
                   </div>
@@ -419,7 +710,13 @@ const EditCompany = () => {
                           <label className="form-label">
                             Address <span className="text-danger">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="address"
+                            value={form.address || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -428,9 +725,15 @@ const EditCompany = () => {
                             Country <span className="text-danger"> *</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={countryChoose}
                             defaultValue={countryChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                country: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -440,9 +743,15 @@ const EditCompany = () => {
                             State <span className="text-danger"> *</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={stateChoose}
                             defaultValue={stateChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                state: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -452,9 +761,15 @@ const EditCompany = () => {
                             City <span className="text-danger"> *</span>
                           </label>
                           <CommonSelect
-                            className='select'
+                            className="select"
                             options={cityChoose}
                             defaultValue={cityChoose[1]}
+                            onChange={(o) =>
+                              setForm((p: any) => ({
+                                ...p,
+                                city: o?.value || "",
+                              }))
+                            }
                           />
                         </div>
                       </div>
@@ -463,7 +778,13 @@ const EditCompany = () => {
                           <label className="form-label">
                             Zipcode <span className="text-danger">*</span>
                           </label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="zipcode"
+                            value={form.zipcode || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                     </div>
@@ -476,7 +797,11 @@ const EditCompany = () => {
                     >
                       Cancel
                     </button>
-                    <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                    <button
+                      type="button"
+                      data-bs-dismiss="modal"
+                      className="btn btn-primary"
+                    >
                       Save{" "}
                     </button>
                   </div>
@@ -493,37 +818,73 @@ const EditCompany = () => {
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Facebook</label>
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="facebook"
+                            value={form.facebook || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Twitter</label>
-                          <input type="email" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="twitter"
+                            value={form.twitter || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">LinkedIn</label>
-                          <input type="email" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="linkedin"
+                            value={form.linkedin || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Skype</label>
-                          <input type="email" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="skype"
+                            value={form.skype || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Whatsapp</label>
-                          <input type="email" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="whatsapp"
+                            value={form.whatsapp || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="mb-3">
                           <label className="form-label">Instagram</label>
-                          <input type="email" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="instagram"
+                            value={form.instagram || ""}
+                            onChange={onChange}
+                          />
                         </div>
                       </div>
                     </div>
@@ -536,7 +897,12 @@ const EditCompany = () => {
                     >
                       Cancel
                     </button>
-                    <button type="button" data-bs-dismiss="modal" className="btn btn-primary">
+                    <button
+                      type="button"
+                      data-bs-dismiss="modal"
+                      className="btn btn-primary"
+                      onClick={onSave}
+                    >
                       Save{" "}
                     </button>
                   </div>
@@ -733,7 +1099,7 @@ const EditCompany = () => {
                     <div className="mb-3 ">
                       <label className="form-label">Status</label>
                       <CommonSelect
-                        className='select'
+                        className="select"
                         options={status}
                         defaultValue={status[1]}
                       />
@@ -764,7 +1130,7 @@ const EditCompany = () => {
       </div>
       {/* /Edit Company */}
     </>
-  )
-}
+  );
+};
 
-export default EditCompany
+export default EditCompany;

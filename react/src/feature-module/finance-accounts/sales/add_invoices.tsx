@@ -6,7 +6,8 @@ import CommonSelect from "../../../core/common/commonSelect";
 import { DatePicker, message } from "antd";
 import { useSocket } from "../../../SocketContext";
 import { Socket } from "socket.io-client";
-import dayjs from "dayjs";  
+import dayjs from "dayjs";
+import Footer from "../../../core/common/footer";  
 
 
 type PasswordField = "password" | "confirmPassword";
@@ -446,15 +447,7 @@ const updatePaymentDetail = (index: number, field: string, value: any) => {
           </div>
         </div>
         {/* Footer */}
-        <div className="footer d-sm-flex align-items-center justify-content-between bg-white border-top p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
         {/* /Footer */}
       </div>
       {/* /Page Wrapper */}

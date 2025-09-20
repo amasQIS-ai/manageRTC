@@ -201,7 +201,7 @@ import LeaveReport from "../administration/reports/leavereport";
 import DailyReport from "../administration/reports/dailyreport";
 import PermissionPage from "../administration/user-management/permissionpage";
 import JobGrid from "../recruitment/jobs/jobgrid";
-import JobList from "../recruitment/joblist/joblist";
+import JobList from "../recruitment/jobs/joblist";
 import CandidateGrid from "../recruitment/candidates/candidategrid";
 import CandidateKanban from "../recruitment/candidates/candidatekanban";
 import CandidatesList from "../recruitment/candidates/candidatelist";
@@ -2100,12 +2100,12 @@ export const authRoutes = [
     element: <ResetPasswordSuccess3 />,
     roles: ["public"],
   },
-  //  {
-  //   path: routes.employeedetails,
-  //   route: Route,
-  //   element: <EmployeeDetails />,
-  //   roles: ["public"],
-  // },
+   {
+    path: routes.employeedetails,
+    route: Route,
+    element: <EmployeeDetails />,
+    roles: ["public"],
+  },
    {
     path: routes.employeeDetailPage,
     route: Route,

@@ -32,6 +32,8 @@ export const getTenantCollections = (tenantDbName) => {
     stats: db.collection("stats"),
     companies: db.collection("companies"),
     details: db.collection("details"),     // for company details
+    contacts: db.collection("contacts"),
+    details: db.collection("details"),     // for contact details
     leads: db.collection("leads"),
 
     // Admin dashboard collections
@@ -46,11 +48,12 @@ export const getTenantCollections = (tenantDbName) => {
     leaveTypes: db.collection("leaveTypes"),
     approvals: db.collection("approvals"),
     invoices: db.collection("invoices"),
+    deals: db.collection("deals"),
     activities: db.collection("activities"),
     todos: db.collection("todos"),
     schedules: db.collection("schedules"),
     birthdays: db.collection("birthdays"),
-    jobApplications: db.collection("jobApplications"),
+    jobs: db.collection("jobApplications"),
     earnings: db.collection("earnings"),
 
     
@@ -83,6 +86,12 @@ export const getTenantCollections = (tenantDbName) => {
     // invoice section
     addInvoices: db.collection("invoices"),
 
+    termination: db.collection("termination"),
+    resignation: db.collection("resignation"),
+
+    // notes - application
+    notes: db.collection("notes"),
+    candidates: db.collection("candidates")
   };
 };
 
@@ -96,7 +105,11 @@ export const getsuperadminCollections = () => {
   return {
     stats: db.collection("stats"),
     companiesCollection: db.collection("companies"),
+    contacts: db.collection("contacts"),
     packagesCollection: db.collection("packages"),
     subscriptionsCollection: db.collection("subscriptions"),
+    trainingtypes: db.collection("trainingtypes"),
+    trainers: db.collection("trainers"),
+    trainings: db.collection("trainings"),
   };
 };

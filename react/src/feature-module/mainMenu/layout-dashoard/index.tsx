@@ -11,6 +11,8 @@ import ProjectModals from "../../../core/modals/projectModal";
 import RequestModals from "../../../core/modals/requestModal";
 import TodoModal from "../../../core/modals/todoModal";
 import { useDispatch } from "react-redux";
+import Footer from "../../../core/common/footer";
+
 import {
   resetAllMode,
   setDataLayout,
@@ -3147,19 +3149,11 @@ const LayoutDemo = () => {
             {/* /Birthdays */}
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
       <ProjectModals />
-      <RequestModals />
+      <RequestModals mode = "employee" />
       <TodoModal />
     </>
   );

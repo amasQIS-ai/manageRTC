@@ -1,6 +1,6 @@
 import { 
   createAddInvoice, 
-  getAddInvoices, 
+  getx, 
   updateAddInvoice, 
   deleteAddInvoice 
 } from "../../services/addInvoice/addInvoice.services.js";
