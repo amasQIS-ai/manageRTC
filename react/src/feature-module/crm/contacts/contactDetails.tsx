@@ -14,6 +14,7 @@ const ContactDetails = () => {
   const { contactId } = useParams();
   const [activeContact, setActiveContact] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const backendurl = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     const load = async () => {
@@ -149,13 +150,7 @@ const ContactDetails = () => {
                           window as any
                         ).Clerk?.session?.getToken();
                         await fetch(
-                          `${
-                            (typeof import.meta !== "undefined" &&
-                              (import.meta as any).env
-                                ?.REACT_APP_BACKEND_URL) ||
-                            (window as any).REACT_APP_BACKEND_URL ||
-                            "http://localhost:5000"
-                          }/api/contacts/${activeContact._id}`,
+                          `${backendurl}/api/contacts/${activeContact._id}`,
                           {
                             method: "DELETE",
                             headers: { Authorization: `Bearer ${token}` },
@@ -535,13 +530,7 @@ const ContactDetails = () => {
                                   window as any
                                 ).Clerk?.session?.getToken();
                                 await fetch(
-                                  `${
-                                    (typeof import.meta !== "undefined" &&
-                                      (import.meta as any).env
-                                        ?.REACT_APP_BACKEND_URL) ||
-                                    (window as any).REACT_APP_BACKEND_URL ||
-                                    "http://localhost:5000"
-                                  }/api/contacts/${activeContact._id}`,
+                                  `${backendurl}/api/contacts/${activeContact._id}`,
                                   {
                                     method: "DELETE",
                                     headers: {

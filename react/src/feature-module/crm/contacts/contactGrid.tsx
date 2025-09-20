@@ -12,6 +12,7 @@ const ContactGrid = () => {
   const routes = all_routes;
   const { getToken } = useAuth();
   const { contacts, fetchContacts, loading, error } = useContacts();
+  const backendurl = process.env.REACT_APP_BACKEND_URL;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("name");
@@ -53,16 +54,16 @@ const ContactGrid = () => {
   const handleExport = async (format: "pdf" | "excel") => {
     try {
       const token = await getToken();
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/contacts/export?format=${format}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const backendurl = process.env.REACT_APP_BACKEND_URL;
+      const urllink = backendurl + `/api/contacts/export?format=${format}`;
+      console.log("Backend Contact GRID -> ", urllink);
+      const response = await fetch(urllink, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -273,11 +274,7 @@ const ContactGrid = () => {
                                   try {
                                     const token = await getToken();
                                     await fetch(
-                                      `${
-                                        (import.meta as any).env
-                                          ?.REACT_APP_BACKEND_URL ||
-                                        "http://localhost:5000"
-                                      }/api/contacts/${c._id}`,
+                                      `${backendurl}/api/contacts/${c._id}`,
                                       {
                                         method: "DELETE",
                                         headers: {

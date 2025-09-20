@@ -12,6 +12,7 @@ const CompaniesGrid = () => {
   const routes = all_routes;
   const { getToken } = useAuth();
   const { companies, fetchCompanies, loading, error } = useCompanies();
+  const backendurl = process.env.REACT_APP_BACKEND_URL;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -66,7 +67,7 @@ const CompaniesGrid = () => {
     try {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/companies/export?format=${format}`,
+        `${backendurl}/api/companies/export?format=${format}`,
         {
           method: "GET",
           headers: {
@@ -314,11 +315,7 @@ const CompaniesGrid = () => {
                                   try {
                                     const token = await getToken();
                                     await fetch(
-                                      `${
-                                        (import.meta as any).env
-                                          ?.REACT_APP_BACKEND_URL ||
-                                        "http://localhost:5000"
-                                      }/api/companies/${c._id}`,
+                                      `${backendurl}/api/companies/${c._id}`,
                                       {
                                         method: "DELETE",
                                         headers: {

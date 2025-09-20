@@ -20,6 +20,7 @@ const CompaniesList = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const backendurl = process.env.REACT_APP_BACKEND_URL;
 
   const data = useMemo(() => {
     let filteredCompanies = companies;
@@ -106,7 +107,7 @@ const CompaniesList = () => {
     try {
       const token = await getToken();
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/companies/export?format=${format}`,
+        `${backendurl}/api/companies/export?format=${format}`,
         {
           method: "GET",
           headers: {
@@ -444,10 +445,7 @@ const CompaniesList = () => {
                 try {
                   const token = await getToken();
                   const response = await fetch(
-                    `${
-                      (import.meta as any).env?.REACT_APP_BACKEND_URL ||
-                      "http://localhost:5000"
-                    }/api/companies/${record._id}`,
+                    `${backendurl}/api/companies/${record._id}`,
                     {
                       method: "DELETE",
                       headers: { Authorization: `Bearer ${token}` },
