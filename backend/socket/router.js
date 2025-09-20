@@ -8,7 +8,7 @@ import clientController from "../controllers/client/client.controllers.js";
 import activityController from "../controllers/activities/activities.controllers.js";
 import { ChatController } from "../controllers/chat/chat.controller.js";
 import { ChatUsersController } from "../controllers/chat/users.controller.js";
-
+import assetSocketController from "../controllers/assets/asset.socket.controller.js";
 import userSocketController from "../controllers/user/user.socket.controller.js";
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 
@@ -44,7 +44,10 @@ const router = (socket, io, role) => {
       hrDashboardController(socket, io);
       console.log("Attaching admin controller...");
       adminController(socket, io);
+      console.log("Attaching Invoice controller for admin...");
       invoiceSocketController(socket, io);
+      console.log("Attaching Asset controller for admin...");
+      assetSocketController(socket, io);
       console.log("Attaching lead controller for admin...");
       leadController(socket, io);
       console.log("Attaching client controller for admin...");
@@ -60,8 +63,11 @@ const router = (socket, io, role) => {
 
     case "hr":
       console.log("Attaching HR controller...");
-      invoiceSocketController(socket, io);
       hrDashboardController(socket, io);
+      console.log("Attaching Invoice controller for admin...");
+      invoiceSocketController(socket, io);
+      console.log("Attaching Asset controller for hr...");
+      assetSocketController(socket, io);
       console.log("Attaching lead controller for hr...");
       leadController(socket, io);
       console.log("Attaching client controller for hr...");
