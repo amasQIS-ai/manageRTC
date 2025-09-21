@@ -400,57 +400,136 @@ const LeadsList = () => {
 
       // Add company logo with multiple fallback options
       const addCompanyLogo = async () => {
-        const logoOptions = [
-          '/assets/img/logo.svg',
-          '/assets/img/logo-small.svg', 
-          '/assets/img/logo-2.svg',
-          '/favicon.png',
-          '/assets/img/apple-touch-icon.png'
+        console.log('🎯 Starting logo loading process...');
+        
+        // Try to load the new manage RTC logo first
+        const logoPaths = [
+          '/assets/img/logo.svg',           // New manage RTC logo (priority)
+          '/assets/img/logo-white.svg',     // White version of manage RTC logo
+          '/assets/img/logo-small.svg',     // Small version of manage RTC logo
         ];
 
-        for (const logoPath of logoOptions) {
+        for (const logoPath of logoPaths) {
           try {
-            const response = await fetch(logoPath);
-            if (response.ok) {
-              const logoBlob = await response.blob();
-              const logoDataUrl = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.readAsDataURL(logoBlob);
-              });
-              
-              // Try to add logo image to PDF with proper format detection and square aspect ratio
-              const format = logoPath.endsWith('.svg') ? 'SVG' : 'PNG';
-              doc.addImage(logoDataUrl as string, format, 20, 15, 20, 20);
-              console.log(`Successfully loaded logo from: ${logoPath}`);
-              return true;
+            console.log(`🔄 Loading NEW logo: ${logoPath}`);
+            
+            // Try multiple approaches to load the logo
+            const approaches = [
+              // Approach 1: Direct fetch with cache busting
+              `${logoPath}?v=${Date.now()}&bust=${Math.random()}`,
+              // Approach 2: Simple cache busting
+              `${logoPath}?t=${Date.now()}`,
+              // Approach 3: No cache busting
+              logoPath
+            ];
+            
+            for (const url of approaches) {
+              try {
+                console.log(`🔄 Trying URL: ${url}`);
+                const response = await fetch(url, {
+                  method: 'GET',
+                  cache: 'no-store',
+                  headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                  }
+                });
+                
+                if (response.ok) {
+                  console.log(`✅ Logo response OK: ${response.status}`);
+                  
+                  // Get the SVG content as text
+                  const svgText = await response.text();
+                  console.log(`📄 SVG content length: ${svgText.length} characters`);
+                  
+                  // Check if this is a valid SVG
+                  if (svgText.includes('<svg') && svgText.length > 100) {
+                    console.log('🎉 Found valid SVG logo!');
+                  } else {
+                    console.log('⚠️ Invalid SVG content, trying next approach...');
+                    continue;
+                  }
+                  
+                  // Try to convert SVG to canvas for better PDF compatibility
+                  try {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    
+                    // Set canvas size to maintain aspect ratio (logo.svg is 115x40)
+                    canvas.width = 115;
+                    canvas.height = 40;
+                    
+                    // Create a promise to handle image loading
+                    const imagePromise = new Promise((resolve, reject) => {
+                      img.onload = () => {
+                        try {
+                          // Draw the SVG image to canvas maintaining aspect ratio
+                          ctx?.drawImage(img, 0, 0, 115, 40);
+                          
+                          // Convert canvas to PNG data URL
+                          const pngDataUrl = canvas.toDataURL('image/png');
+                          console.log(`✅ Successfully converted SVG to PNG: ${logoPath}`);
+                          resolve(pngDataUrl);
+                        } catch (error) {
+                          reject(error);
+                        }
+                      };
+                      img.onerror = reject;
+                      
+                      // Set the SVG as image source
+                      const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgText)}`;
+                      img.src = svgDataUrl;
+                    });
+                    
+                    // Wait for image conversion
+                    const pngDataUrl = await imagePromise;
+                    
+                    // Add PNG to PDF with proper dimensions (maintain aspect ratio)
+                    doc.addImage(pngDataUrl as string, 'PNG', 20, 15, 30, 10.4);
+                    console.log(`✅ Successfully added logo to PDF: ${logoPath}`);
+                    return true;
+                    
+                  } catch (canvasError) {
+                    console.log(`❌ Canvas conversion failed:`, canvasError);
+                    
+                    // Fallback: Try direct SVG
+                    try {
+                      const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgText)}`;
+                      doc.addImage(svgDataUrl, 'SVG', 20, 15, 30, 10.4);
+                      console.log(`✅ Successfully added logo as SVG: ${logoPath}`);
+                      return true;
+                    } catch (svgError) {
+                      console.log(`❌ SVG format also failed:`, svgError);
+                    }
+                  }
+                } else {
+                  console.log(`❌ Logo fetch failed: ${response.status} ${response.statusText}`);
+                }
+              } catch (fetchError) {
+                console.log(`❌ Fetch error for ${url}:`, fetchError);
+              }
             }
           } catch (error) {
-            console.log(`Failed to load logo from ${logoPath}:`, error);
-            continue;
+            console.log(`❌ Error loading ${logoPath}:`, error);
           }
         }
+        
+        console.log('❌ All logo loading attempts failed');
         return false;
       };
 
-      // Try to add logo, fallback to styled text if all fail
+      // Try to add logo - NO FALLBACK TEXT, ONLY USE YOUR NEW LOGOS
       const logoAdded = await addCompanyLogo();
       if (!logoAdded) {
-        // Enhanced fallback with better styling
-        console.log("All logo options failed, using enhanced text fallback");
-        
-        // Create a more professional text logo with square aspect ratio
-        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.roundedRect(20, 15, 20, 20, 2, 2, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'bold');
-        doc.text("AMASQIS", 22, 23);
-        
-        doc.setFontSize(5);
-        doc.setFont(undefined, 'normal');
-        doc.text("HRMS", 22, 28);
+        console.log("❌ CRITICAL: New logo loading failed!");
+        console.log("🔍 Check if logo files exist: /assets/img/logo.svg, /assets/img/logo-white.svg, /assets/img/logo-small.svg");
+        console.log("📁 Make sure React dev server is running and files are accessible");
+        // NO FALLBACK TEXT - just leave space for logo
+        console.log("⚠️ No logo added to PDF - using empty space instead of fallback text");
+      } else {
+        console.log("✅ Logo successfully added to PDF!");
       }
 
       // Company name and report title

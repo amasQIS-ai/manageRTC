@@ -2786,7 +2786,14 @@ const AdminDashboard = () => {
                                 <span className="fs-13 d-inline-flex align-items-center">
                                   Exp : {applicant.experience}
                                   <i className="ti ti-circle-filled fs-4 mx-2 text-primary" />
-                                  {applicant.location}
+                                  {(() => {
+                                    if (typeof applicant.location === 'object' && applicant.location !== null) {
+                                      const loc = applicant.location as {city?: string, state?: string, country?: string};
+                                      const parts = [loc.city, loc.state, loc.country].filter(Boolean);
+                                      return parts.length > 0 ? parts.join(', ') : '-';
+                                    }
+                                    return (applicant.location as string) || '-';
+                                  })()}
                                 </span>
                               </div>
                             </div>

@@ -248,7 +248,14 @@ const LeadsDetails = () => {
                       </span>
                     </h5>
                     <p className="text-dark mb-1">
-                      {leadDetails.address}
+                      {(() => {
+                        if (typeof leadDetails.address === 'object' && leadDetails.address !== null) {
+                          const addr = leadDetails.address as any;
+                          const parts = [addr?.street, addr?.city, addr?.state, addr?.country, addr?.zipCode].filter(Boolean);
+                          return parts.length > 0 ? parts.join(', ') : '-';
+                        }
+                        return leadDetails.address || '-';
+                      })()}
                     </p>
                     <p className="d-inline-flex align-items-center text-dark mb-2">
                       <i className="ti ti-building me-1" />
