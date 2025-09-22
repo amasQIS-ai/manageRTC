@@ -9,6 +9,7 @@ export type Option = {
 export interface SelectProps {
   options: Option[];
   defaultValue?: Option | string; // Accept both Option objects and string labels
+  value?: Option | null;
   className?: string;
   onChange?: (selectedOption: Option | null) => void;
   isSearchable?: boolean;

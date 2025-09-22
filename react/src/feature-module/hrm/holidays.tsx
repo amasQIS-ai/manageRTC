@@ -5,6 +5,7 @@ import { all_routes } from "../router/all_routes";
 import Table from "../../core/common/dataTable/index";
 import { HolidaysData } from "../../core/data/json/holidaysData";
 import HolidaysModal from "../../core/modals/holidaysModal";
+import Footer from "../../core/common/footer";
 
 const Holidays = () => {
   const routes = all_routes;
@@ -118,15 +119,7 @@ const Holidays = () => {
             </div>
           </div>
         </div>
-        <div className="footer d-sm-flex align-items-center justify-content-between border-top bg-white p-3">
-          <p className="mb-0">2014 - 2025 © Amasqis.</p>
-          <p>
-            Designed &amp; Developed By{" "}
-            <Link to="https://amasqis.ai" className="text-primary">
-              Amasqis
-            </Link>
-          </p>
-        </div>
+        <Footer />
       </div>
       {/* /Page Wrapper */}
 
