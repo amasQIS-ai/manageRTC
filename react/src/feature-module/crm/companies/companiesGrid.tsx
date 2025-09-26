@@ -363,7 +363,10 @@ const CompaniesGrid = () => {
                         </p>
                         <p className="text-dark d-inline-flex align-items-center">
                           <i className="ti ti-map-pin text-gray-5 me-2" />
-                          {c.address?.city || c.location || "-"}
+                          {c.address?.city || 
+                           (typeof c.location === 'object' && c.location !== null 
+                             ? `${c.location.city || ''}${c.location.state ? ', ' + c.location.state : ''}${c.location.country ? ', ' + c.location.country : ''}`.replace(/^,\s*/, '') || '-'
+                             : c.location) || "-"}
                         </p>
                       </div>
                       <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">

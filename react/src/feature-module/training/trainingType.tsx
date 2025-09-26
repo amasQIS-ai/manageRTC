@@ -6,6 +6,7 @@ import Table from "../../core/common/dataTable/index";
 import TrainingTypeModal from "../../core/modals/trainingTypeModal";
 import ImageWithBasePath from '../../core/common/imageWithBasePath';
 import CommonSelect from '../../core/common/commonSelect';
+import Footer from "../../core/common/footer";
 import { useSocket } from "../../SocketContext";
 import { Socket } from "socket.io-client";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";

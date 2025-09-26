@@ -13,6 +13,7 @@ import socialFeedRoutes from "./routes/socialfeed.routes.js";
 import dealRoutes from "./routes/deal.routes.js";
 import companiesRoutes from "./routes/companies.routes.js";
 import contactRoutes from "./routes/contacts.routes.js";
+import ticketRoutes from "./routes/tickets.routes.js";
 
 config();
 
@@ -69,6 +70,7 @@ const initializeServer = async () => {
     app.use("/api/deals", dealRoutes);
     app.use("/api/companies", companiesRoutes);
     app.use("/api/contacts", contactRoutes);
+    app.use("/api/tickets", ticketRoutes);
 
     app.get("/", (req, res) => {
       res.send("API is running");

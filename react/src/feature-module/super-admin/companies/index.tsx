@@ -1297,7 +1297,14 @@ const Companies = () => {
                         <p className="fs-12 fw-medium mb-1 text-truncate">
                           Company Location
                         </p>
-                        <h4>{company_details.location || <Skeleton />}</h4>
+                        <h4>{(() => {
+                          if (typeof company_details.location === 'object' && company_details.location !== null) {
+                            const loc = company_details.location as any;
+                            const parts = [loc?.city, loc?.state, loc?.country].filter(Boolean);
+                            return parts.length > 0 ? parts.join(', ') : '-';
+                          }
+                          return company_details.location || <Skeleton />;
+                        })()}</h4>
                       </div>
                     </div>
                   </div>
@@ -2559,9 +2566,16 @@ const Companies = () => {
                           <div className="col-md-4">
                             <div className="mb-3">
                               <p className="fs-12 mb-0">Address</p>
-                              <p className="text-gray-9">
-                                {companydetail.address}
-                              </p>
+                                <p className="text-gray-9">
+                                 {(() => {
+                                   if (typeof companydetail.address === 'object' && companydetail.address !== null) {
+                                     const addr = companydetail.address as any;
+                                     const parts = [addr?.street, addr?.city, addr?.state, addr?.country, addr?.zipCode].filter(Boolean);
+                                     return parts.length > 0 ? parts.join(', ') : '-';
+                                   }
+                                   return companydetail.address || '-';
+                                 })()}
+                                </p>
                             </div>
                           </div>
                         </div>
