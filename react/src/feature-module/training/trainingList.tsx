@@ -69,7 +69,7 @@ const TrainingList = () => {
     const [stats, setStats] = useState<Stats>({ totalTrainingList: "0",});
     const [loading, setLoading] = useState<boolean>(true);
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-    const [filterType, setFilterType] = useState<string>("last7days");
+    const [filterType, setFilterType] = useState<string>("alltime");
     const [editing, setEditing] = useState<any>(null);
     const [customRange, setCustomRange] = useState<{ startDate?: string; endDate?: string }>({});
     const [empPopupOpen, setEmpPopupOpen] = useState(false);
@@ -157,6 +157,7 @@ const TrainingList = () => {
         ),
         onOk: async () => {
           await onConfirm();
+          socket.emit("hr/trainingList/trainingListlist", { type: "alltime" });
         },
       });
     };
@@ -357,7 +358,7 @@ const TrainingList = () => {
         cost: "",
         status: "Active",
       });
-      socket.emit("hr/trainingList/trainingListlist", { type: "last7days" });
+      socket.emit("hr/trainingList/trainingListlist", { type: "alltime" });
     };
 
     const handleEditSave = () => {
@@ -402,7 +403,7 @@ const TrainingList = () => {
           status: "Active",
           trainingId: "",
       });
-      socket.emit("hr/trainingList/trainingListlist", { type: "last7days" });
+      socket.emit("hr/trainingList/trainingListlist", { type: "alltime" });
     };
 
     const fetchStats = useCallback(() => {
@@ -422,7 +423,7 @@ const TrainingList = () => {
     type Option = { value: string; label: string };
      
     const handleFilterChange = (opt: Option | null) => {
-      const value = opt?.value ?? "last7days";
+      const value = opt?.value ?? "alltime";
       setFilterType(value);
       if (value !== "custom") {
         setCustomRange({});
