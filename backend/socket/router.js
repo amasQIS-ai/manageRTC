@@ -9,12 +9,16 @@ import activityController from "../controllers/activities/activities.controllers
 import dealController from "../controllers/deal/deal.controller.js";
 import { ChatController } from "../controllers/chat/chat.controller.js";
 import { ChatUsersController } from "../controllers/chat/users.controller.js";
-
+import assetSocketController from "../controllers/assets/asset.socket.controller.js";
 import userSocketController from "../controllers/user/user.socket.controller.js";
 import socialFeedSocketController from "../controllers/socialfeed/socialFeed.socket.controller.js";
 import employeeController from "../controllers/employee/employee.controller.js";
 import notesController from "../controllers/employee/notes.controller.js";
 import ticketsSocketController from "../controllers/tickets/tickets.socket.controller.js";
+
+import jobsController from "../controllers/jobs/jobs.controllers.js";
+import candidateController from "../controllers/candidates/candidates.controllers.js";
+import trainersController from "../controllers/hr/trainers.controller.js";
 
 const router = (socket, io, role) => {
   console.log(`Setting up socket router for role: ${role}`);
@@ -44,11 +48,16 @@ const router = (socket, io, role) => {
       socialFeedSocketController(socket, io);
       break;
     case "admin":
+      console.log("Attaching Trainers controller...");
+      trainersController(socket, io);
       console.log("Attaching HR controller...");
       hrDashboardController(socket, io);
       console.log("Attaching admin controller...");
       adminController(socket, io);
+      console.log("Attaching Invoice controller for admin...");
       invoiceSocketController(socket, io);
+      console.log("Attaching Asset controller for admin...");
+      assetSocketController(socket, io);
       console.log("Attaching lead controller for admin...");
       leadController(socket, io);
       console.log("Attaching client controller for admin...");
@@ -67,12 +76,21 @@ const router = (socket, io, role) => {
       notesController(socket, io);
       console.log("Attaching tickets controller for admin...");
       ticketsSocketController(socket, io);
+      console.log("Attaching candidate controller for admin...");
+      candidateController(socket, io);
+      console.log("Attaching jobsController for admin...");
+      jobsController(socket, io);
       break;
 
     case "hr":
+      console.log("Attaching Trainers controller...");
+      trainersController(socket, io);
       console.log("Attaching HR controller...");
-      invoiceSocketController(socket, io);
       hrDashboardController(socket, io);
+      console.log("Attaching Invoice controller for admin...");
+      invoiceSocketController(socket, io);
+      console.log("Attaching Asset controller for hr...");
+      assetSocketController(socket, io);
       console.log("Attaching lead controller for hr...");
       leadController(socket, io);
       console.log("Attaching client controller for hr...");
@@ -88,6 +106,10 @@ const router = (socket, io, role) => {
       notesController(socket, io);
       console.log("Attaching tickets controller for hr...");
       ticketsSocketController(socket, io);
+      console.log("Attaching jobs controller for hr...");
+      jobsController(socket, io);
+      console.log("Attaching candidate controller for hr...");
+      candidateController(socket, io);
       break;
     case "leads":
       console.log("Attaching leads controller...");
