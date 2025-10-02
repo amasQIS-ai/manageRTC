@@ -9,7 +9,7 @@ export type Option = {
 export interface SelectProps {
   options: Option[];
   defaultValue?: Option | string; // Accept both Option objects and string labels
-  value?: Option | null;
+  value?: Option | string | null;
   className?: string;
   onChange?: (selectedOption: Option | null) => void;
   isSearchable?: boolean;
@@ -19,6 +19,7 @@ export interface SelectProps {
   const CommonSelect: React.FC<SelectProps> = ({
     options,
     defaultValue,
+    value,
     className,
     onChange,
     isSearchable = true,
@@ -33,14 +34,16 @@ export interface SelectProps {
   };
 
   const getInitialValue = (): Option | null => {
-    if (!defaultValue) return null;
+    // Priority: value prop > defaultValue prop
+    const propValue = value || defaultValue;
+    if (!propValue) return null;
     
-    if (typeof defaultValue === "string") {
+    if (typeof propValue === "string") {
       // Try to find by label first, then by value
-      return findOptionByLabel(defaultValue) || findOptionByValue(defaultValue) || null;
+      return findOptionByLabel(propValue) || findOptionByValue(propValue) || null;
     }
 
-    return defaultValue;
+    return propValue;
   };
 
   const [selectedOption, setSelectedOption] = useState<Option | null>(
@@ -57,7 +60,7 @@ export interface SelectProps {
   useEffect(() => {
     const newValue = getInitialValue();
     setSelectedOption(newValue);
-  }, [defaultValue, options]);
+  }, [value, defaultValue, options]);
 
   return (
     <Select
